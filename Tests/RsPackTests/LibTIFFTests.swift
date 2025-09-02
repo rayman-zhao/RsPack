@@ -8,6 +8,6 @@ func testLibTIFF() async throws {
     
     let path = Bundle.main.path(forResource: "TCGA-BR-4369-01Z-00-DX1", ofType: "svs", inDirectory: "RsPack_RsPackTests.resources")
     let f = TIFFOpen(path, "r")
-    TIFFPrintDirectory(f, stdout, Int32(TIFFPRINT_NONE))
+    TIFFPrintDirectory(f, stdout, 0)
     TIFFClose(f)
 }
