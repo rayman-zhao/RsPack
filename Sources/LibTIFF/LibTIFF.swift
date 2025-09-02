@@ -16,10 +16,10 @@ private func cWarningHandler(_ module: UnsafePointer<CChar>?, _ fmt: UnsafePoint
     var buf = [CChar](repeating: 0, count: bufSize)
     // TODO: var span = buf.mutableSpan
     _ = vsnprintf(&buf, bufSize, fmt, ap)
-    let msg = String(cString: buf)
-    
-    Task { @MainActor in
-        warningHandler?(md, msg)
+    if let msg = String(utf8String: buf) {
+        Task { @MainActor in
+            warningHandler?(md, msg)
+        }
     }
 }
 
