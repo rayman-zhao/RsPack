@@ -1,0 +1,7 @@
+//cmake -DWITH_JPEG8=ON  ../
+
+module CLibJPEGTurbo [system] {
+    header "Include/turbojpeg.h"
+    link "turbojpeg"
+    export *
+}

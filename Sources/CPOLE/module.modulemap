@@ -1,0 +1,4 @@
+module CPOLE {
+    header "Include/cpole.h"
+    export *
+}
