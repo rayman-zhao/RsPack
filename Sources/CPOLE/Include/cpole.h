@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <string>
 #include <vector>
 #include "pole.h"
 
@@ -26,8 +27,11 @@ public:
         return storage->result();
     }
     std::vector<std::string> entries(const std::string &path = "/") const {
+        //return storage->entries(path);
+        // For now, in Swift 6.2 std:list does not conform to CxxConvertibleToCollection on Windows.
+        // So that has not forEach method. Have to convert to vector.
         auto list = storage->entries(path);
-        return std::vector(list.begin(), list.end());
+        return std::vector<std::string>(list.begin(), list.end());
     }
     bool isDirectory(const std::string &name) const {
         return storage->isDirectory(name);
