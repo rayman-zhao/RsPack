@@ -6,8 +6,8 @@ import LibTIFF
 func testLibTIFF() async throws {
     print("libtiff version \(String(cString: TIFFGetVersion()))")
     
-//    let path = "/Users/zhaoyu/Downloads/2312399.svs"
-//    let f = TIFFOpen(path, "r")
-//    TIFFPrintDirectory(f, stdout, Int(TIFFPRINT_NONE))
-//    TIFFClose(f)
+    let path = Bundle.main.path(forResource: "TCGA-BR-4369-01Z-00-DX1", ofType: "svs", inDirectory: "RsPack_RsPackTests.resources")
+    let f = TIFFOpen(path, "r")
+    TIFFPrintDirectory(f, stdout, Int32(TIFFPRINT_NONE))
+    TIFFClose(f)
 }
