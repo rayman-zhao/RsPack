@@ -6,7 +6,8 @@ import PackageDescription
 let package = Package(
     name: "RsPack",
     platforms: [
-        .macOS(.v15)
+    	.windows,
+    	.macOS(.v15),
     ],
     products: [
         .library(
@@ -54,10 +55,12 @@ let package = Package(
         .target(
             name: "LibJPEGTurbo",
             dependencies: [
-                "CLibJPEGTurbo",
+                .target(name: "CLibJPEGTurbo_x64-windows", condition: .when(platforms: [.windows])),
+                .target(name: "CLibJPEGTurbo", condition: .when(platforms: [.macOS])),
             ],
             linkerSettings: [
-                .unsafeFlags(["-L\(Context.packageDirectory)/Sources/CLibJPEGTurbo/Lib"]),
+                .unsafeFlags(["-L\(Context.packageDirectory)/Sources/CLibJPEGTurbo_x64-windows/Lib"], .when(platforms: [.windows])),
+                .unsafeFlags(["-L\(Context.packageDirectory)/Sources/CLibJPEGTurbo/Lib"], .when(platforms: [.macOS])),
             ],
         ),
         .target(
@@ -93,6 +96,9 @@ let package = Package(
         ),
         .systemLibrary(
             name: "CZlibNg",
+        ),
+        .systemLibrary(
+            name: "CLibJPEGTurbo_x64-windows",
         ),
         .systemLibrary(
             name: "CLibJPEGTurbo",
