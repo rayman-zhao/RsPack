@@ -76,11 +76,13 @@ let package = Package(
         .target(
             name: "LibTIFF",
             dependencies: [
-                "CLibTIFF",
                 "LibJPEGTurbo",
+                .target(name: "CLibTIFF_x64-windows", condition: .when(platforms: [.windows])),
+                .target(name: "CLibTIFF", condition: .when(platforms: [.macOS])),
             ],
             linkerSettings: [
-                .unsafeFlags(["-L\(Context.packageDirectory)/Sources/CLibTIFF/Lib"]),
+                .unsafeFlags(["-L\(Context.packageDirectory)/Sources/CLibTIFF_x64-windows/Lib"], .when(platforms: [.windows])),
+                .unsafeFlags(["-L\(Context.packageDirectory)/Sources/CLibTIFF/Lib"], .when(platforms: [.macOS])),
             ],
         ),
         .target(
@@ -109,6 +111,9 @@ let package = Package(
         ),
         .systemLibrary(
             name: "CLibPNG",
+        ),
+        .systemLibrary(
+            name: "CLibTIFF_x64-windows",
         ),
         .systemLibrary(
             name: "CLibTIFF",

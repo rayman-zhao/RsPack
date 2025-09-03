@@ -1,0 +1,7 @@
+// cmake -DZLIB_LIBRARY=../../RsPack/Sources/CZlibNg_x64-windows/Lib/z.lib -DZLIB_INCLUDE_DIR=../../RsPack/Sources/CZlibNg_x64-windows/Include -DJPEG_LIBRARY=../../RsPack/Sources/CLibJPEGTurbo_x64-windows/Lib/jpeg.lib -DJPEG_INCLUDE_DIR=../../RsPack/Sources/CLibJPEGTurbo_x64-windows/Include -DCMAKE_POLICY_VERSION_MINIMUM=4.0 -DHAVE_JPEGTURBO_DUAL_MODE_8_12=1 -DBUILD_SHARED_LIBS=OFF ../
+
+module CLibTIFF [system] {
+	header "Include/tiffio.h"
+	link "tiff"
+	export *
+}
