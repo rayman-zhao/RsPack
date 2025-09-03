@@ -67,10 +67,12 @@ let package = Package(
         .target(
             name: "LibPNG",
             dependencies: [
-                "CLibPNG",
+                .target(name: "CLibPNG_x64-windows", condition: .when(platforms: [.windows])),
+                .target(name: "CLibPNG", condition: .when(platforms: [.macOS])),
             ],
             linkerSettings: [
-                .unsafeFlags(["-L\(Context.packageDirectory)/Sources/CLibPNG/Lib"]),
+                .unsafeFlags(["-L\(Context.packageDirectory)/Sources/CLibPNG_x64-windows/Lib"], .when(platforms: [.windows])),
+                .unsafeFlags(["-L\(Context.packageDirectory)/Sources/CLibPNG/Lib"], .when(platforms: [.macOS])),
             ],
         ),
         .target(
@@ -108,6 +110,9 @@ let package = Package(
         ),
         .systemLibrary(
             name: "CLibJPEGTurbo_arm64-macos",
+        ),
+        .systemLibrary(
+            name: "CLibPNG_x64-windows",
         ),
         .systemLibrary(
             name: "CLibPNG",

@@ -1,0 +1,7 @@
+//cmake -DZLIB_LIBRARY=../../RsPack/Sources/CZlibNg_x64-windows/Lib/z.lib -DZLIB_INCLUDE_DIR=../../RsPack/Sources/CZlibNg_x64-windows/Include ../
+
+module CLibPNG [system] {
+    header "Include/png.h"
+    link "png16"
+    export *
+}
