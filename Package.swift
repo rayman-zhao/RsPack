@@ -45,10 +45,12 @@ let package = Package(
         .target(
             name: "Zlib",
             dependencies: [
-                "CZlibNg",
+            	.target(name: "CZlibNg_x64-windows", condition: .when(platforms: [.windows])),
+                .target(name: "CZlibNg", condition: .when(platforms: [.macOS])),
             ],
             linkerSettings: [
-                .unsafeFlags(["-L\(Context.packageDirectory)/Sources/CZlibNg/Lib"]),
+                .unsafeFlags(["-L\(Context.packageDirectory)/Sources/CZlibNg_x64-windows/Lib"], .when(platforms: [.windows])),
+                .unsafeFlags(["-L\(Context.packageDirectory)/Sources/CZlibNg/Lib"], .when(platforms: [.macOS])),
             ],
         ),
         .target(
@@ -92,6 +94,9 @@ let package = Package(
             ],
             cxxSettings: [
             ],
+        ),
+        .systemLibrary(
+            name: "CZlibNg_x64-windows",
         ),
         .systemLibrary(
             name: "CZlibNg",
