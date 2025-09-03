@@ -46,11 +46,11 @@ let package = Package(
             name: "Zlib",
             dependencies: [
             	.target(name: "CZlibNg_x64-windows", condition: .when(platforms: [.windows])),
-                .target(name: "CZlibNg", condition: .when(platforms: [.macOS])),
+                .target(name: "CZlibNg_arm64-macos", condition: .when(platforms: [.macOS])),
             ],
             linkerSettings: [
                 .unsafeFlags(["-L\(Context.packageDirectory)/Sources/CZlibNg_x64-windows/Lib"], .when(platforms: [.windows])),
-                .unsafeFlags(["-L\(Context.packageDirectory)/Sources/CZlibNg/Lib"], .when(platforms: [.macOS])),
+                .unsafeFlags(["-L\(Context.packageDirectory)/Sources/CZlibNg_arm64-macos/Lib"], .when(platforms: [.macOS])),
             ],
         ),
         .target(
@@ -68,11 +68,11 @@ let package = Package(
             name: "LibPNG",
             dependencies: [
                 .target(name: "CLibPNG_x64-windows", condition: .when(platforms: [.windows])),
-                .target(name: "CLibPNG", condition: .when(platforms: [.macOS])),
+                .target(name: "CLibPNG_arm64-macos", condition: .when(platforms: [.macOS])),
             ],
             linkerSettings: [
                 .unsafeFlags(["-L\(Context.packageDirectory)/Sources/CLibPNG_x64-windows/Lib"], .when(platforms: [.windows])),
-                .unsafeFlags(["-L\(Context.packageDirectory)/Sources/CLibPNG/Lib"], .when(platforms: [.macOS])),
+                .unsafeFlags(["-L\(Context.packageDirectory)/Sources/CLibPNG_arm64-macos/Lib"], .when(platforms: [.macOS])),
             ],
         ),
         .target(
@@ -80,11 +80,11 @@ let package = Package(
             dependencies: [
                 "LibJPEGTurbo",
                 .target(name: "CLibTIFF_x64-windows", condition: .when(platforms: [.windows])),
-                .target(name: "CLibTIFF", condition: .when(platforms: [.macOS])),
+                .target(name: "CLibTIFF_arm64-macos", condition: .when(platforms: [.macOS])),
             ],
             linkerSettings: [
                 .unsafeFlags(["-L\(Context.packageDirectory)/Sources/CLibTIFF_x64-windows/Lib"], .when(platforms: [.windows])),
-                .unsafeFlags(["-L\(Context.packageDirectory)/Sources/CLibTIFF/Lib"], .when(platforms: [.macOS])),
+                .unsafeFlags(["-L\(Context.packageDirectory)/Sources/CLibTIFF_arm64-macos/Lib"], .when(platforms: [.macOS])),
             ],
         ),
         .target(
@@ -103,7 +103,7 @@ let package = Package(
             name: "CZlibNg_x64-windows",
         ),
         .systemLibrary(
-            name: "CZlibNg",
+            name: "CZlibNg_arm64-macos",
         ),
         .systemLibrary(
             name: "CLibJPEGTurbo_x64-windows",
@@ -115,13 +115,13 @@ let package = Package(
             name: "CLibPNG_x64-windows",
         ),
         .systemLibrary(
-            name: "CLibPNG",
+            name: "CLibPNG_arm64-macos",
         ),
         .systemLibrary(
             name: "CLibTIFF_x64-windows",
         ),
         .systemLibrary(
-            name: "CLibTIFF",
+            name: "CLibTIFF_arm64-macos",
         ),
     ]
 )
