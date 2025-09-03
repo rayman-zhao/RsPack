@@ -1,7 +1,0 @@
-//cmake -DZLIB_COMPAT=ON -DZLIB_ENABLE_TESTS=OFF ../
-
-module CZlibNg [system] {
-	header "Include/zlib.h"
-	link "z"
-	export *
-}
