@@ -3,9 +3,12 @@ import Testing
 @testable import POLE
 
 @Test
-func testPOLE() {
-	let path = Bundle.main.path(forResource: "Workbook", ofType: "xls", inDirectory: "RsPack_RsPackTests.resources")
-    let s = CStorage(path!)
+func testPOLE() throws {
+    let path = Bundle.module.path(forResource: "Workbook", ofType: "xls") ?? // For test in SPM
+               Bundle.module.path(forResource: "Workbook", ofType: "xls", inDirectory: "Resources") // For test in XCode
+    try #require(path != nil, "No xls file found in \(Bundle.module.resourcePath!))")
+    
+    let s = CStorage(path)
     let ret = s.open()
     #expect(ret)
     

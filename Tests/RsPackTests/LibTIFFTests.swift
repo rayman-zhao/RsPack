@@ -6,7 +6,10 @@ import LibTIFF
 func testLibTIFF() async throws {
     print("libtiff version \(String(cString: TIFFGetVersion()))")
     
-    let path = Bundle.main.path(forResource: "TCGA-BR-4369-01Z-00-DX1", ofType: "svs", inDirectory: "RsPack_RsPackTests.resources")
+    let path = Bundle.module.path(forResource: "TCGA-BR-4369-01Z-00-DX1", ofType: "svs") ??
+               Bundle.module.path(forResource: "TCGA-BR-4369-01Z-00-DX1", ofType: "svs", inDirectory: "Resources")
+    try #require(path != nil, "No svs file found in \(Bundle.module.resourcePath!))")
+    
     let f = TIFFOpen(path, "r")
     TIFFPrintDirectory(f, stdout, 0)
     TIFFClose(f)
