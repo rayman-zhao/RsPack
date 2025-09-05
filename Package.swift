@@ -20,6 +20,9 @@ let package = Package(
             ],
         ),
     ],
+    dependencies: [
+        .package(url: "https://github.com/rayman-zhao/RsHelper.git", branch: "main"),
+    ],
     targets: [
         .testTarget(
             name: "RsPackTests",         
@@ -29,6 +32,7 @@ let package = Package(
                 "LibJPEGTurbo",
                 "LibPNG",
                 "LibTIFF",
+                .product(name: "RsHelper", package: "RsHelper"),
             ],
             resources: [
             	.copy("Resources/"),
