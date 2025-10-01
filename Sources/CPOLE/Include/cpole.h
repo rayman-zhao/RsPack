@@ -1,73 +1,28 @@
 #pragma once
 
-#include <memory>
-#include <string>
-#include <vector>
-#include "pole.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-class CStorage {
-    friend class CStream;
-    
-public:
-    enum class Result { Ok, OpenFailed, NotOLE, BadOLE, UnknownError };
-    
-    CStorage(const char *filename)
-        : storage(std::make_shared<POLE::Storage>(filename)) {
-    }
-    ~CStorage() {
-    }
-    
-    bool open() const {
-        return storage->open();
-    }
-    void close() const {
-        storage->close();
-    }
-    int result() const {
-        return storage->result();
-    }
-    std::vector<std::string> entries(const std::string &path = "/") const {
-        //return storage->entries(path);
-        // For now, in Swift 6.2 std:list does not conform to CxxConvertibleToCollection on Windows.
-        // So that has not forEach method. Have to convert to vector.
-        auto list = storage->entries(path);
-        return std::vector<std::string>(list.begin(), list.end());
-    }
-    bool isDirectory(const std::string &name) const {
-        return storage->isDirectory(name);
-    }
-    bool exists(const char *name) const {
-        return storage->exists(name);
-    }
-    std::list<std::string> GetAllStreams(const std::string &storageName) const {
-        return storage->GetAllStreams(storageName);
-    }
-    
-private:
-    std::shared_ptr<POLE::Storage> storage;
-};
+#include <stdbool.h>
 
-class CStream {
-public:
-    CStream(const CStorage &storage, const char *name, bool bCreate = false, POLE::int64 streamSize = 0)
-    : stream(std::make_shared<POLE::Stream>(storage.storage.get(), name, bCreate, streamSize)) {
-    }
-    ~CStream() {
-    }
-    
-    std::string fullName() const {
-        return stream->fullName();
-    }
-    POLE::uint64 size() const {
-        return stream->size();
-    }
-    POLE::uint64 read(unsigned char *data, POLE::uint64 maxlen) const {
-        return stream->read(data, maxlen);
-    }
-    bool fail() const {
-        return stream->fail();
-    }
+void * CStorage_create(const char *fileName);
+void CStorage_destroy(void *cstorage);
+bool CStorage_open(void *cstorage);
+void CStorage_close(void *cstorage);
+int CStorage_result(void *cstorage);
+char ** CStorage_entries(const void *cstorage, const char *path);
+bool CStorage_isDirectory(const void *cstorage, const char *name);
+bool CStorage_exists(const void *cstorage, const char *name);
+char ** CStorage_getAllStreams(const void *cstorage, const char *storageName);
 
-private:
-    std::shared_ptr<POLE::Stream> stream;
-};
+void * CStream_create(void *storage, const char *name);
+void CStream_destroy(void *cstream);
+char * CStream_fullName(void *cstream);
+size_t CStream_size(void *cstream);
+size_t CStream_read(void *cstream, unsigned char *data, size_t maxlen);
+bool CStream_fail(void *cstream);
+
+#ifdef __cplusplus
+}
+#endif

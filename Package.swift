@@ -37,14 +37,12 @@ let package = Package(
             resources: [
             	.copy("Resources/"),
             ],
-            swiftSettings: [.interoperabilityMode(.Cxx)],
         ),
         .target(
             name: "POLE",
             dependencies: [
                 "CPOLE",
             ],
-            swiftSettings: [.interoperabilityMode(.Cxx)],
         ),
         .target(
             name: "Zlib",
