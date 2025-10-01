@@ -8,7 +8,7 @@ func testPOLE() throws {
     let path = Bundle.module.path(forResource: "Workbook.xls")
     try #require(path != nil, "No xls file found in \(Bundle.module.resourcePath!))")
     
-    let s = POLE.Storage(path!)
+    let s = Storage(path!)
     let ret = s.open()
     #expect(ret)
     #expect(s.result() == .ok)
@@ -25,7 +25,7 @@ func testPOLE() throws {
     let streams = s.getAllStreams("/")
     #expect(streams.count == e.count)
 
-    let stream = POLE.Stream(s, "/Workbook")
+    let stream = Stream(s, "/Workbook")
     #expect(stream.fullName() == "/Workbook")
     #expect(stream.size() > 0)
     #expect(stream.read(1).count == 1)
