@@ -78,7 +78,8 @@ public func TIFFReadJPEGImage(_ tif: OpaquePointer?, _ dirnum: UInt32) -> Data {
         if buf.prefix(4) == [0xFF, 0xD8, 0xFF, 0xC0] {
             let dqt: (count: UInt32?, data: UnsafeMutableRawPointer?) = TIFFGetField(tif, TIFFTAG_JPEGTABLES)
             if let count = dqt.count, let data = dqt.data {
-                jpeg.replaceSubrange(0..<2, with: data.assumingMemoryBound(to: UInt8.self), count: Int(count)) 
+                // The DQT data is 0xFFDB...0xFFD9
+                jpeg.replaceSubrange(0..<2, with: data.assumingMemoryBound(to: UInt8.self), count: Int(count) - 2) 
             }
         }
 
