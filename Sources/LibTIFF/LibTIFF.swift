@@ -68,19 +68,21 @@ public func TIFFReadJPEGImage(_ tif: OpaquePointer?, _ dirnum: UInt32) -> Data {
     
     if let comp: UInt16 = TIFFGetField(tif, TIFFTAG_COMPRESSION),
        comp == UInt16(COMPRESSION_JPEG) {
-        let dqt: (count: UInt32?, data: UnsafeMutableRawPointer?) = TIFFGetField(tif, TIFFTAG_JPEGTABLES)
-        if let count = dqt.count {
-            Task { @MainActor in
-                warningHandler?("RsPack.LibTIFF", "Found JPEG DQT \(count) bytes.")
+        let bufSize = Int(TIFFRawStripSize(tif, 0))
+        var buf = [UInt8](repeating: 0, count: bufSize)
+        // TODO: var span = buf.mutableSpan
+        let stripSize = Int(TIFFReadRawStrip(tif, 0, &buf, tmsize_t(bufSize)))
+
+        var jpeg = Data(buf[..<stripSize])
+
+        if buf.prefix(4) == [0xFF, 0xD8, 0xFF, 0xC0] {
+            let dqt: (count: UInt32?, data: UnsafeMutableRawPointer?) = TIFFGetField(tif, TIFFTAG_JPEGTABLES)
+            if let count = dqt.count, let data = dqt.data {
+                jpeg.replaceSubrange(0..<2, with: data.assumingMemoryBound(to: UInt8.self), count: Int(count)) 
             }
-        } else {
-            let bufSize = Int(TIFFRawStripSize(tif, 0))
-            var buf = [UInt8](repeating: 0, count: bufSize)
-            // TODO: var span = buf.mutableSpan
-            let stripSize = Int(TIFFReadRawStrip(tif, 0, &buf, tmsize_t(bufSize)))
-        
-            return Data(buf[..<stripSize])
         }
+
+        return jpeg
     }
     
     if let w: UInt32 = TIFFGetField(tif, TIFFTAG_IMAGEWIDTH),
