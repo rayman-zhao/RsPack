@@ -91,8 +91,11 @@ public func TIFFReadJPEGImage(_ tif: OpaquePointer?, _ dirnum: UInt32) -> Data {
         let bufSize = Int(w * h)
         var buf = [UInt32](repeating: 0, count: bufSize)
         // TODO: var span = buf.mutableSpan
+
         if TIFFReadRGBAImageOriented(tif, w, h, &buf, ORIENTATION_TOPLEFT, 0) == 1 {
-            return tjCompress(buf, Int(w), Int(h))
+            return buf.withUnsafeBytes { bytes in
+                return tjCompress(bytes, TJPF_RGBA, Int(w), Int(h))
+            }
         }
     }
     
