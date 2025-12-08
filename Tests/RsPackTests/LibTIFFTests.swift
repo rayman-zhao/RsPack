@@ -11,6 +11,8 @@ func testLibTIFF() async throws {
     try #require(path != nil, "No svs file found in \(Bundle.module.resourcePath!))")
     
     let f = TIFFOpen(path, "r")
-    TIFFPrintDirectory(f, stdout, 0)
+    repeat {
+        TIFFPrintDirectory(f, stdout, 0)
+    } while (TIFFReadDirectory(f) == 1) 
     TIFFClose(f)
 }
