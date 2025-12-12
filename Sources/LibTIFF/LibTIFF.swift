@@ -65,8 +65,7 @@ public func TIFFGetField<T, P>(_ tif: OpaquePointer?, _ tag: Int32) -> (T?, P?) 
 
 @available(*, deprecated, message: "Use return Array version")
 public func TIFFReadJPEGImage(_ tif: OpaquePointer?, _ dirnum: UInt32) -> Data {
-    let buf: [UInt8] = TIFFReadJPEGImage(tif, dirnum)
-    return Data(buf)
+    return Data(TIFFReadJPEGImage(tif, dirnum) as [UInt8])
 }
 
 public func TIFFReadJPEGImage(_ tif: OpaquePointer?, _ dirnum: UInt32) -> [UInt8] {

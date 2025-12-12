@@ -7,8 +7,7 @@ public func tjGetErrorStr(_ handle: tjhandle?) -> String {
 
 @available(*, deprecated, message: "Use return Array version")
 public func tjCompress(_ srcBuf: UnsafeRawBufferPointer, _ pixelFormat: TJPF, _ width: Int, _ height: Int  ) -> Data {
-    let buf: [UInt8] = tjCompress(srcBuf, pixelFormat, width, height)
-    return Data(buf)
+    return Data(tjCompress(srcBuf, pixelFormat, width, height) as [UInt8])
 }
 
 public func tjCompress(_ srcBuf: UnsafeRawBufferPointer, _ pixelFormat: TJPF, _ width: Int, _ height: Int  ) -> [UInt8] {

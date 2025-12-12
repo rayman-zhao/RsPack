@@ -69,8 +69,7 @@ public class Stream {
     }
     @available(*, deprecated, message: "Use return Array version")
     public func read(_ maxlen: Int = Int.max) -> Data {
-        let buf: [UInt8] = read(maxlen)
-        return Data(buf)
+        return Data(read(maxlen) as [UInt8])
     }
 
     public func read(_ maxlen: Int = Int.max) -> [UInt8] {
