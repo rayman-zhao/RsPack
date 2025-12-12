@@ -5,7 +5,13 @@ public func tjGetErrorStr(_ handle: tjhandle?) -> String {
     return String(cString: tj3GetErrorStr(handle))
 }
 
+@available(*, deprecated, message: "Use return Array version")
 public func tjCompress(_ srcBuf: UnsafeRawBufferPointer, _ pixelFormat: TJPF, _ width: Int, _ height: Int  ) -> Data {
+    let buf: [UInt8] = tjCompress(srcBuf, pixelFormat, width, height)
+    return Data(buf)
+}
+
+public func tjCompress(_ srcBuf: UnsafeRawBufferPointer, _ pixelFormat: TJPF, _ width: Int, _ height: Int  ) -> [UInt8] {
     let tj = tj3Init(Int32(TJINIT_COMPRESS.rawValue))
     defer { tj3Destroy(tj) }
     tj3Set(tj, Int32(TJPARAM_QUALITY.rawValue), 85)
@@ -15,9 +21,9 @@ public func tjCompress(_ srcBuf: UnsafeRawBufferPointer, _ pixelFormat: TJPF, _ 
     defer { tj3Free(jpegBuf) }
     var jpegSize: Int = 0
     if tj3Compress8(tj, srcBuf.baseAddress, Int32(width), 0, Int32(height), pixelFormat.rawValue, &jpegBuf, &jpegSize) == 0 {
-        return Data(bytes: jpegBuf!, count: jpegSize)
+        return Array(UnsafeBufferPointer(start: jpegBuf, count: jpegSize))
     }
     else {
-        return Data()
+        return []
     }
 }

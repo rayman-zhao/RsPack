@@ -67,14 +67,20 @@ public class Stream {
     public func size() -> Int {
         return CStream_size(cstream)
     }
-
+    @available(*, deprecated, message: "Use return Array version")
     public func read(_ maxlen: Int = Int.max) -> Data {
+        let buf: [UInt8] = read(maxlen)
+        return Data(buf)
+    }
+
+    public func read(_ maxlen: Int = Int.max) -> [UInt8] {
         let bufSize = min(size(), maxlen)
-        guard bufSize > 0 else { return Data() }
+        guard bufSize > 0 else { return [] }
 
         var buf = [UInt8](repeating: 0, count: bufSize)
         let readSize = CStream_read(cstream, &buf, bufSize)
-        return Data(buf[..<readSize])
+
+        return readSize == bufSize ? buf : Array(buf[..<readSize])
     }
 
     public func fail() -> Bool {

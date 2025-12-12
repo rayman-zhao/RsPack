@@ -63,8 +63,14 @@ public func TIFFGetField<T, P>(_ tif: OpaquePointer?, _ tag: Int32) -> (T?, P?) 
     return success == 1 ? (pv.pointee, pv2.pointee) : (nil, nil)
 }
 
+@available(*, deprecated, message: "Use return Array version")
 public func TIFFReadJPEGImage(_ tif: OpaquePointer?, _ dirnum: UInt32) -> Data {
-    guard TIFFSetDirectory(tif, dirnum) else { return Data() }
+    let buf: [UInt8] = TIFFReadJPEGImage(tif, dirnum)
+    return Data(buf)
+}
+
+public func TIFFReadJPEGImage(_ tif: OpaquePointer?, _ dirnum: UInt32) -> [UInt8] {
+    guard TIFFSetDirectory(tif, dirnum) else { return [] }
     
     if let comp: UInt16 = TIFFGetField(tif, TIFFTAG_COMPRESSION),
        comp == UInt16(COMPRESSION_JPEG) {
@@ -73,13 +79,13 @@ public func TIFFReadJPEGImage(_ tif: OpaquePointer?, _ dirnum: UInt32) -> Data {
         // TODO: var span = buf.mutableSpan
         let stripSize = Int(TIFFReadRawStrip(tif, 0, &buf, tmsize_t(bufSize)))
 
-        var jpeg = Data(buf[..<stripSize])
+        var jpeg = stripSize == bufSize ? buf : Array(buf[..<stripSize])
 
         if buf.prefix(4) == [0xFF, 0xD8, 0xFF, 0xC0] {
             let dqt: (count: UInt32?, data: UnsafeMutableRawPointer?) = TIFFGetField(tif, TIFFTAG_JPEGTABLES)
             if let count = dqt.count, let data = dqt.data {
                 // The DQT data is 0xFFDB...0xFFD9
-                jpeg.replaceSubrange(0..<2, with: data.assumingMemoryBound(to: UInt8.self), count: Int(count) - 2) 
+                jpeg.replaceSubrange(0..<2, with: UnsafeBufferPointer(start: data.assumingMemoryBound(to: UInt8.self), count: Int(count) - 2)) 
             }
         }
 
@@ -99,5 +105,5 @@ public func TIFFReadJPEGImage(_ tif: OpaquePointer?, _ dirnum: UInt32) -> Data {
         }
     }
     
-    return Data()
+    return []
 }

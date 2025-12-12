@@ -28,8 +28,8 @@ func testPOLE() throws {
     let stream = Stream(s, "/Workbook")
     #expect(stream.fullName() == "/Workbook")
     #expect(stream.size() > 0)
-    #expect(stream.read(1).count == 1)
-    #expect(stream.read().count > 1)
+    #expect((stream.read(1) as [UInt8]).count == 1)
+    #expect((stream.read() as [UInt8]).count > 1)
     #expect(stream.fail() == false)
     
     s.close()
