@@ -63,11 +63,6 @@ public func TIFFGetField<T, P>(_ tif: OpaquePointer?, _ tag: Int32) -> (T?, P?) 
     return success == 1 ? (pv.pointee, pv2.pointee) : (nil, nil)
 }
 
-@available(*, deprecated, message: "Use return Array version")
-public func TIFFReadJPEGImage(_ tif: OpaquePointer?, _ dirnum: UInt32) -> Data {
-    return Data(TIFFReadJPEGImage(tif, dirnum) as [UInt8])
-}
-
 public func TIFFReadJPEGImage(_ tif: OpaquePointer?, _ dirnum: UInt32) -> [UInt8] {
     guard TIFFSetDirectory(tif, dirnum) else { return [] }
     
@@ -98,9 +93,7 @@ public func TIFFReadJPEGImage(_ tif: OpaquePointer?, _ dirnum: UInt32) -> [UInt8
         // TODO: var span = buf.mutableSpan
 
         if TIFFReadRGBAImageOriented(tif, w, h, &buf, ORIENTATION_TOPLEFT, 0) == 1 {
-            return buf.withUnsafeBytes { bytes in
-                return tjCompress(bytes, TJPF_RGBA, Int(w), Int(h))
-            }
+            return tjCompress(buf, TJPF_RGBA, Int(w), Int(h))
         }
     }
     
