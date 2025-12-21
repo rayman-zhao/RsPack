@@ -12,6 +12,7 @@ let package = Package(
         .library(
             name: "RsPack",
             targets: [
+                "MBL",
                 "POLE",
                 "Zlib",
                 "LibJPEGTurbo",
@@ -27,6 +28,7 @@ let package = Package(
         .testTarget(
             name: "RsPackTests",         
             dependencies: [
+                "MBL",
             	"POLE",
                 "Zlib",
                 "LibJPEGTurbo",
@@ -36,6 +38,12 @@ let package = Package(
             ],
             resources: [
             	.copy("Resources/"),
+            ],
+        ),
+        .target(
+            name: "MBL",
+            dependencies: [
+                "CMBL",
             ],
         ),
         .target(
@@ -87,6 +95,18 @@ let package = Package(
             linkerSettings: [
                 .unsafeFlags(["-L\(Context.packageDirectory)/Sources/CLibTIFF_x64-windows/Lib"], .when(platforms: [.windows])),
                 .unsafeFlags(["-L\(Context.packageDirectory)/Sources/CLibTIFF_arm64-macos/Lib"], .when(platforms: [.macOS])),
+            ],
+        ),
+        .target(
+            name: "CMBL",
+            dependencies: [
+            ],
+            exclude: [
+            ],
+            sources: [
+                "./Sources"
+            ],
+            cxxSettings: [
             ],
         ),
         .target(
