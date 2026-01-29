@@ -22,7 +22,7 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/rayman-zhao/RsHelper.git", branch: "main"),
+        .package(url: "https://github.com/rayman-zhao/RsHelper", branch: "main"),
     ],
     targets: [
         .testTarget(
