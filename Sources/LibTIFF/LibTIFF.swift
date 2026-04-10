@@ -65,6 +65,7 @@ public func TIFFGetField<T, P>(_ tif: OpaquePointer?, _ tag: Int32) -> (T?, P?) 
 
 public func TIFFReadJPEGImage(_ tif: OpaquePointer?, _ dirnum: UInt32) -> [UInt8] {
     guard TIFFSetDirectory(tif, dirnum) else { return [] }
+    guard TIFFGetField(tif, TIFFTAG_TILEWIDTH) == nil else { return [] }
     
     if let comp: UInt16 = TIFFGetField(tif, TIFFTAG_COMPRESSION),
        comp == UInt16(COMPRESSION_JPEG) {
