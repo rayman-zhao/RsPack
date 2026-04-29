@@ -68,7 +68,9 @@ public func TIFFReadJPEGImage(_ tif: OpaquePointer?, _ dirnum: UInt32) -> [UInt8
     guard TIFFGetField(tif, TIFFTAG_TILEWIDTH) == nil else { return [] }
     
     if let comp: UInt16 = TIFFGetField(tif, TIFFTAG_COMPRESSION),
-       comp == UInt16(COMPRESSION_JPEG) {
+       comp == UInt16(COMPRESSION_JPEG),
+       let photometric: UInt16 = TIFFGetField(tif, TIFFTAG_PHOTOMETRIC),
+       photometric == UInt16(PHOTOMETRIC_YCBCR) {
         let bufSize = Int(TIFFRawStripSize(tif, 0))
         var buf = [UInt8](repeating: 0, count: bufSize)
         // TODO: var span = buf.mutableSpan
