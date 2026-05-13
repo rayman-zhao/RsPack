@@ -3,9 +3,12 @@ import Foundation
 import LibJPEGTurbo
 
 public typealias TIFFWarningHandler = (String, String) -> Void
+public typealias TIFFErrorHandler = (String, String) -> Void
 
 @MainActor
 private var warningHandler: TIFFWarningHandler? = nil
+@MainActor
+private var errorHandler: TIFFErrorHandler? = nil
 
 private func cWarningHandler(_ module: UnsafePointer<CChar>?, _ fmt: UnsafePointer<CChar>?, _ ap: CVaListPointer?) -> Void {
     guard let module, let fmt, let ap else { return }
@@ -23,10 +26,32 @@ private func cWarningHandler(_ module: UnsafePointer<CChar>?, _ fmt: UnsafePoint
     }
 }
 
+private func cErrorHandler(_ module: UnsafePointer<CChar>?, _ fmt: UnsafePointer<CChar>?, _ ap: CVaListPointer?) -> Void {
+    guard let module, let fmt, let ap else { return }
+    
+    let md = String(cString: module)
+    
+    let bufSize = 256
+    var buf = [CChar](repeating: 0, count: bufSize)
+    // TODO: var span = buf.mutableSpan
+    _ = vsnprintf(&buf, bufSize, fmt, ap)
+    if let msg = String(utf8String: buf) {
+        Task { @MainActor in
+            errorHandler?(md, msg)
+        }
+    }
+}
+
 @MainActor
 public func TIFFSetWarningHanlder(_ handler: @escaping TIFFWarningHandler) -> Void {
     warningHandler = handler
     TIFFSetWarningHandler(cWarningHandler)
+}
+
+@MainActor
+public func TIFFSetErrorHanlder(_ handler: @escaping TIFFErrorHandler) -> Void {
+    errorHandler = handler
+    TIFFSetErrorHandler(cErrorHandler)
 }
 
 public func TIFFSetDirectory(_ tif: OpaquePointer?, _ dirnum: UInt32) -> Bool {
@@ -61,6 +86,20 @@ public func TIFFGetField<T, P>(_ tif: OpaquePointer?, _ tag: Int32) -> (T?, P?) 
     }
     
     return success == 1 ? (pv.pointee, pv2.pointee) : (nil, nil)
+}
+
+public func TIFFSetField<T: CVarArg>(_ tif: OpaquePointer?, _ tag: Int32, _ value: T) -> Bool {
+    let success = withVaList([value]) { args in
+        return TIFFVSetField(tif, UInt32(tag), args)
+    }
+    return success == 1
+}
+
+public func TIFFSetField<T: CVarArg, P: CVarArg>(_ tif: OpaquePointer?, _ tag: Int32, _ value: T, _ value2: P) -> Bool {
+    let success = withVaList([value, value2]) { args in
+        return TIFFVSetField(tif, UInt32(tag), args)
+    }
+    return success == 1
 }
 
 public func TIFFReadJPEGImage(_ tif: OpaquePointer?, _ dirnum: UInt32) -> [UInt8] {
