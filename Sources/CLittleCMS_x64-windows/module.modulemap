@@ -1,0 +1,5 @@
+module CLittleCMS [system] {
+    header "Include/LittleCMS.h"
+    link "lcms2"
+    export *
+}

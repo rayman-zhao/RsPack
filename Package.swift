@@ -18,6 +18,7 @@ let package = Package(
                 "LibJPEGTurbo",
                 "LibPNG",
                 "LibTIFF",
+                "LittleCMS",
             ],
         ),
     ],
@@ -34,6 +35,7 @@ let package = Package(
                 "LibJPEGTurbo",
                 "LibPNG",
                 "LibTIFF",
+                "LittleCMS",
                 .product(name: "RsHelper", package: "RsHelper"),
             ],
             resources: [
@@ -121,6 +123,17 @@ let package = Package(
             cxxSettings: [
             ],
         ),
+        .target(
+            name: "LittleCMS",
+            dependencies: [
+                .target(name: "CLittleCMS_x64-windows", condition: .when(platforms: [.windows])),
+                // .target(name: "CLittleCMS_arm64-macos", condition: .when(platforms: [.macOS])),
+            ],
+            linkerSettings: [
+                .unsafeFlags(["-L\(Context.packageDirectory)/Sources/CLittleCMS_x64-windows/Lib"], .when(platforms: [.windows])),
+                // .unsafeFlags(["-L\(Context.packageDirectory)/Sources/CLittleCMS_arm64-macos/Lib"], .when(platforms: [.macOS])),
+            ],
+        ),
         .systemLibrary(
             name: "CZlibNg_x64-windows",
         ),
@@ -145,5 +158,11 @@ let package = Package(
         .systemLibrary(
             name: "CLibTIFF_arm64-macos",
         ),
+        .systemLibrary(
+            name: "CLittleCMS_x64-windows",
+        ),
+        // .systemLibrary(
+        //     name: "CLittleCMS_arm64-macos",
+        // ),
     ]
 )
