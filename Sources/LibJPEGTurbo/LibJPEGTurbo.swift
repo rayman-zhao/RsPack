@@ -5,11 +5,12 @@ public func tjGetErrorStr(_ handle: tjhandle?) -> String {
     return String(cString: tj3GetErrorStr(handle))
 }
 
-public func tjCompress<T>(_ srcBuf: [T], _ pixelFormat: TJPF, _ width: Int, _ height: Int, _ pitch: Int = 0) -> [UInt8] {
+public func tjCompress<T>(_ srcBuf: [T], _ pixelFormat: TJPF, _ width: Int, _ height: Int, _ pitch: Int = 0, _ quality: Int = 85, _ flip: Bool = false) -> [UInt8] {
     let tj = tj3Init(Int32(TJINIT_COMPRESS.rawValue))
     defer { tj3Destroy(tj) }
-    tj3Set(tj, Int32(TJPARAM_QUALITY.rawValue), 85)
+    tj3Set(tj, Int32(TJPARAM_QUALITY.rawValue), Int32(quality))
     tj3Set(tj, Int32(TJPARAM_SUBSAMP.rawValue), TJSAMP_420.rawValue)
+    tj3Set(tj, Int32(TJPARAM_BOTTOMUP.rawValue), flip ? 1 : 0)
     
     var jpegBuf: UnsafeMutablePointer<UInt8>? = nil
     defer { tj3Free(jpegBuf) }
