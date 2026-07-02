@@ -400,7 +400,7 @@ namespace MBL
 
       const int sw = image->Width - 1, sh = image->Height - 1, dw = ret->Width - 1, dh = ret->Height - 1;
       const int nPixelSize = GetUnitsPerPixel(ret);
-      const int nSrcRowSize = GetUnitsPerRow(image);
+      const size_t nSrcRowSize = GetUnitsPerRow(image);
       const int nDestRowSize = GetUnitsPerRow(ret);
 
       int B, N, x, y;
