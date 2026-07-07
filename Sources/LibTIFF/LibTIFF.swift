@@ -102,8 +102,12 @@ public func TIFFSetField<T: CVarArg, P: CVarArg>(_ tif: OpaquePointer?, _ tag: I
     return success == 1
 }
 
-public func TIFFReadJPEGImage(_ tif: OpaquePointer?, _ dirnum: UInt32) -> [UInt8] {
+public func TIFFReadJPEGImage(_ tif: OpaquePointer?, _ dirnum: UInt32, _ subifdOffset: UInt64? = nil) -> [UInt8] {
     guard TIFFSetDirectory(tif, dirnum) else { return [] }
+    if let subifdOffset {
+        TIFFSetSubDirectory(tif, subifdOffset)
+    }
+
     let tileWidth: UInt32? = TIFFGetField(tif, TIFFTAG_TILEWIDTH)
     guard tileWidth == nil else { return [] }
     
