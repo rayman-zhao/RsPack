@@ -1,4 +1,4 @@
-// swift-tools-version: 6.2
+// swift-tools-version: 6.3
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -23,7 +23,7 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/rayman-zhao/RsHelper", branch: "main"),
+        .package(url: "https://github.com/rayman-zhao/RsFoundation", branch: "main"),
     ],
     targets: [
         .testTarget(
@@ -36,7 +36,7 @@ let package = Package(
                 "LibPNG",
                 "LibTIFF",
                 "LittleCMS",
-                .product(name: "RsHelper", package: "RsHelper"),
+                .product(name: "RsFoundation", package: "RsFoundation"),
             ],
             resources: [
             	.copy("Resources/"),

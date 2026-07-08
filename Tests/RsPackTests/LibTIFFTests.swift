@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-import RsHelper
+import RsFoundation
 import LibTIFF
 
 @Test
