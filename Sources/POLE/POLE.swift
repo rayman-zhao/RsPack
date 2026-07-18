@@ -33,7 +33,7 @@ public class Storage {
     }
 
     public func entries(_ path: String = "/") -> [String] {
-        return consumeCStrings2SwiftStrings(CStorage_entries(cstorage, path))
+        return consumeCStringsToSwiftStrings(CStorage_entries(cstorage, path))
     }
 
     public func isDirectory(_ name: String) -> Bool {
@@ -45,7 +45,7 @@ public class Storage {
     }
 
     public func getAllStreams(_ storageName: String) -> [String] {
-        return consumeCStrings2SwiftStrings(CStorage_getAllStreams(cstorage, storageName))
+        return consumeCStringsToSwiftStrings(CStorage_getAllStreams(cstorage, storageName))
     }
 }
 
@@ -61,7 +61,7 @@ public class Stream {
     }
 
     public func fullName() -> String {
-        return consumeCString2SwiftString(CStream_fullName(cstream))
+        return consumeCStringToSwiftString(CStream_fullName(cstream))
     }
 
     public func size() -> Int {
@@ -83,7 +83,7 @@ public class Stream {
     }
 }
 
-private func consumeCStrings2SwiftStrings(
+private func consumeCStringsToSwiftStrings(
     _ cStrings: UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>?
 ) -> [String] {
     guard let cStrings else { return [] }
@@ -102,7 +102,7 @@ private func consumeCStrings2SwiftStrings(
     return sStrings
 }
 
-private func consumeCString2SwiftString(_ cString: UnsafeMutablePointer<CChar>?) -> String {
+private func consumeCStringToSwiftString(_ cString: UnsafeMutablePointer<CChar>?) -> String {
     guard let cString else { return "" }
 
     let sString = String(utf8String: cString)

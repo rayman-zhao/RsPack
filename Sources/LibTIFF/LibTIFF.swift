@@ -43,13 +43,13 @@ private func cErrorHandler(_ module: UnsafePointer<CChar>?, _ fmt: UnsafePointer
 }
 
 @MainActor
-public func TIFFSetWarningHanlder(_ handler: @escaping TIFFWarningHandler) {
+public func TIFFSetWarningHandler(_ handler: @escaping TIFFWarningHandler) {
     warningHandler = handler
     TIFFSetWarningHandler(cWarningHandler)
 }
 
 @MainActor
-public func TIFFSetErrorHanlder(_ handler: @escaping TIFFErrorHandler) {
+public func TIFFSetErrorHandler(_ handler: @escaping TIFFErrorHandler) {
     errorHandler = handler
     TIFFSetErrorHandler(cErrorHandler)
 }

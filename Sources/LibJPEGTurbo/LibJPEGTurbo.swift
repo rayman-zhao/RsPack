@@ -25,7 +25,7 @@ public func tjCompress<T>(_ srcBuf: [T], _ pixelFormat: TJPF, _ width: Int, _ he
     }
 }
 
-public func tjDecompressHeader(_ jpegBuf: [UInt8]) -> (w: Int, h: Int) {
+public func tjDecompressHeader(_ jpegBuf: [UInt8]) -> (width: Int, height: Int) {
     let tj = tj3Init(Int32(TJINIT_DECOMPRESS.rawValue))
     defer { tj3Destroy(tj) }
 
