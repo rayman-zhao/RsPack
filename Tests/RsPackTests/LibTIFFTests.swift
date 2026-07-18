@@ -1,18 +1,18 @@
 import Foundation
-import Testing
-import RsFoundation
 import LibTIFF
+import RsFoundation
+import Testing
 
 @Test
 func testLibTIFF() async throws {
     print("libtiff version \(String(cString: TIFFGetVersion()))")
-    
+
     let path = Bundle.module.path(forResource: "TCGA-BR-4369-01Z-00-DX1.svs")
     try #require(path != nil, "No svs file found in \(Bundle.module.resourcePath!))")
-    
+
     let f = TIFFOpen(path, "r")
     repeat {
         TIFFPrintDirectory(f, stdout, 0)
-    } while (TIFFReadDirectory(f) == 1) 
+    } while TIFFReadDirectory(f) == 1
     TIFFClose(f)
 }

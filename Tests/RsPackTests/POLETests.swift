@@ -1,18 +1,18 @@
 import Foundation
-import Testing
-import RsFoundation
 import POLE
+import RsFoundation
+import Testing
 
 @Test
 func testPOLE() throws {
     let path = Bundle.module.path(forResource: "Workbook.xls")
     try #require(path != nil, "No xls file found in \(Bundle.module.resourcePath!))")
-    
+
     let s = Storage(path!)
     let ret = s.open()
     #expect(ret)
     #expect(s.result() == .ok)
-    
+
     let e = s.entries("/")
     #expect(e.count > 0)
     #expect(s.isDirectory("Workbook") == false)
@@ -31,6 +31,6 @@ func testPOLE() throws {
     #expect((stream.read(1) as [UInt8]).count == 1)
     #expect((stream.read() as [UInt8]).count > 1)
     #expect(stream.fail() == false)
-    
+
     s.close()
 }

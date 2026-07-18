@@ -10,11 +10,11 @@ private var warningHandler: TIFFWarningHandler? = nil
 @MainActor
 private var errorHandler: TIFFErrorHandler? = nil
 
-private func cWarningHandler(_ module: UnsafePointer<CChar>?, _ fmt: UnsafePointer<CChar>?, _ ap: CVaListPointer?) -> Void {
+private func cWarningHandler(_ module: UnsafePointer<CChar>?, _ fmt: UnsafePointer<CChar>?, _ ap: CVaListPointer?) {
     guard let module, let fmt, let ap else { return }
-    
+
     let md = String(cString: module)
-    
+
     let bufSize = 256
     var buf = [CChar](repeating: 0, count: bufSize)
     // TODO: var span = buf.mutableSpan
@@ -26,11 +26,11 @@ private func cWarningHandler(_ module: UnsafePointer<CChar>?, _ fmt: UnsafePoint
     }
 }
 
-private func cErrorHandler(_ module: UnsafePointer<CChar>?, _ fmt: UnsafePointer<CChar>?, _ ap: CVaListPointer?) -> Void {
+private func cErrorHandler(_ module: UnsafePointer<CChar>?, _ fmt: UnsafePointer<CChar>?, _ ap: CVaListPointer?) {
     guard let module, let fmt, let ap else { return }
-    
+
     let md = String(cString: module)
-    
+
     let bufSize = 256
     var buf = [CChar](repeating: 0, count: bufSize)
     // TODO: var span = buf.mutableSpan
@@ -43,13 +43,13 @@ private func cErrorHandler(_ module: UnsafePointer<CChar>?, _ fmt: UnsafePointer
 }
 
 @MainActor
-public func TIFFSetWarningHanlder(_ handler: @escaping TIFFWarningHandler) -> Void {
+public func TIFFSetWarningHanlder(_ handler: @escaping TIFFWarningHandler) {
     warningHandler = handler
     TIFFSetWarningHandler(cWarningHandler)
 }
 
 @MainActor
-public func TIFFSetErrorHanlder(_ handler: @escaping TIFFErrorHandler) -> Void {
+public func TIFFSetErrorHanlder(_ handler: @escaping TIFFErrorHandler) {
     errorHandler = handler
     TIFFSetErrorHandler(cErrorHandler)
 }
@@ -73,11 +73,11 @@ public func TIFFGetField<T>(_ tiff: OpaquePointer?, _ tag: Int32) -> T? {
     defer {
         pv.deallocate()
     }
-    
+
     let success = withVaList([pv]) { args in
         return TIFFVGetField(tiff, UInt32(tag), args)
     }
-    
+
     return success == 1 ? pv.pointee : nil
 }
 
@@ -90,11 +90,11 @@ public func TIFFGetField<T, P>(_ tiff: OpaquePointer?, _ tag: Int32) -> (T?, P?)
     defer {
         pv2.deallocate()
     }
-    
+
     let success = withVaList([pv, pv2]) { args in
         return TIFFVGetField(tiff, UInt32(tag), args)
     }
-    
+
     return success == 1 ? (pv.pointee, pv2.pointee) : (nil, nil)
 }
 
@@ -119,11 +119,12 @@ public func TIFFReadJPEGImage(_ tiff: OpaquePointer?, _ dirnum: UInt32? = nil, _
 
     let tileWidth: UInt32? = TIFFGetField(tiff, TIFFTAG_TILEWIDTH)
     guard tileWidth == nil else { return nil }
-    
+
     if let comp: UInt16 = TIFFGetField(tiff, TIFFTAG_COMPRESSION),
-       comp == UInt16(COMPRESSION_JPEG),
-       let photometric: UInt16 = TIFFGetField(tiff, TIFFTAG_PHOTOMETRIC),
-       photometric == UInt16(PHOTOMETRIC_YCBCR) {
+        comp == UInt16(COMPRESSION_JPEG),
+        let photometric: UInt16 = TIFFGetField(tiff, TIFFTAG_PHOTOMETRIC),
+        photometric == UInt16(PHOTOMETRIC_YCBCR)
+    {
         let bufSize = Int(TIFFRawStripSize(tiff, 0))
         var buf = [UInt8](repeating: 0, count: bufSize)
         // TODO: var span = buf.mutableSpan
@@ -135,15 +136,16 @@ public func TIFFReadJPEGImage(_ tiff: OpaquePointer?, _ dirnum: UInt32? = nil, _
             let dqt: (count: UInt32?, data: UnsafeMutableRawPointer?) = TIFFGetField(tiff, TIFFTAG_JPEGTABLES)
             if let count = dqt.count, let data = dqt.data {
                 // The DQT data is 0xFFDB...0xFFD9
-                jpeg.replaceSubrange(0..<2, with: UnsafeBufferPointer(start: data.assumingMemoryBound(to: UInt8.self), count: Int(count) - 2)) 
+                jpeg.replaceSubrange(0..<2, with: UnsafeBufferPointer(start: data.assumingMemoryBound(to: UInt8.self), count: Int(count) - 2))
             }
         }
 
         return jpeg
     }
-    
+
     if let w: UInt32 = TIFFGetField(tiff, TIFFTAG_IMAGEWIDTH),
-       let h: UInt32 = TIFFGetField(tiff, TIFFTAG_IMAGELENGTH) {
+        let h: UInt32 = TIFFGetField(tiff, TIFFTAG_IMAGELENGTH)
+    {
         let bufSize = Int(w * h)
         var buf = [UInt32](repeating: 0, count: bufSize)
         // TODO: var span = buf.mutableSpan
@@ -152,6 +154,6 @@ public func TIFFReadJPEGImage(_ tiff: OpaquePointer?, _ dirnum: UInt32? = nil, _
             return tjCompress(buf, TJPF_RGBA, Int(w), Int(h))
         }
     }
-    
+
     return nil
 }

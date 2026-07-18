@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 import LibPNG
+import Testing
 
 @Test
 func testLibPNG() async throws {

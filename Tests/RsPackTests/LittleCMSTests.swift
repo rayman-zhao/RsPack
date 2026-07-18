@@ -1,6 +1,6 @@
 import Foundation
-import Testing
 import LittleCMS
+import Testing
 
 @Test
 func testLittleCMS() async throws {

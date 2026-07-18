@@ -2,7 +2,7 @@ import CPOLE
 import Foundation
 
 public class Storage {
-    public enum Result : Int32 {
+    public enum Result: Int32 {
         case ok
         case openFailed
         case notOLE
@@ -37,11 +37,11 @@ public class Storage {
     }
 
     public func isDirectory(_ name: String) -> Bool {
-        return CStorage_isDirectory(cstorage, name);
+        return CStorage_isDirectory(cstorage, name)
     }
 
     public func exists(_ name: String) -> Bool {
-        return CStorage_exists(cstorage, name);
+        return CStorage_exists(cstorage, name)
     }
 
     public func getAllStreams(_ storageName: String) -> [String] {
@@ -83,9 +83,11 @@ public class Stream {
     }
 }
 
-fileprivate func consumeCStrings2SwiftStrings(_ cStrings: UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>?) -> [String] {
+private func consumeCStrings2SwiftStrings(
+    _ cStrings: UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>?
+) -> [String] {
     guard let cStrings else { return [] }
-    
+
     var sStrings: [String] = []
     var index = 0
     while let cstr = cStrings[index] {
@@ -100,9 +102,9 @@ fileprivate func consumeCStrings2SwiftStrings(_ cStrings: UnsafeMutablePointer<U
     return sStrings
 }
 
-fileprivate func consumeCString2SwiftString(_ cString: UnsafeMutablePointer<CChar>?) -> String {
+private func consumeCString2SwiftString(_ cString: UnsafeMutablePointer<CChar>?) -> String {
     guard let cString else { return "" }
-    
+
     let sString = String(utf8String: cString)
     free(cString)
     return sString ?? ""
