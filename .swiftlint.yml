@@ -1,7 +1,7 @@
 disabled_rules:
   - opening_brace  # swift-format conflict
   - trailing_comma
-  - todo
+#  - todo
 #  - force_try
 
 line_length: 160
