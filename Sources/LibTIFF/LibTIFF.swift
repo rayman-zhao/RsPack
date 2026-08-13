@@ -6,11 +6,13 @@ public typealias TIFFWarningHandler = (String, String) -> Void
 public typealias TIFFErrorHandler = (String, String) -> Void
 
 @MainActor
-private var warningHandler: TIFFWarningHandler? = nil
+private var warningHandler: TIFFWarningHandler?
 @MainActor
-private var errorHandler: TIFFErrorHandler? = nil
+private var errorHandler: TIFFErrorHandler?
 
-private func cWarningHandler(_ module: UnsafePointer<CChar>?, _ fmt: UnsafePointer<CChar>?, _ ap: CVaListPointer?) {
+private func cWarningHandler(
+    _ module: UnsafePointer<CChar>?, _ fmt: UnsafePointer<CChar>?, _ ap: CVaListPointer?
+) {
     guard let module, let fmt, let ap else { return }
 
     let md = String(cString: module)
@@ -26,7 +28,9 @@ private func cWarningHandler(_ module: UnsafePointer<CChar>?, _ fmt: UnsafePoint
     }
 }
 
-private func cErrorHandler(_ module: UnsafePointer<CChar>?, _ fmt: UnsafePointer<CChar>?, _ ap: CVaListPointer?) {
+private func cErrorHandler(
+    _ module: UnsafePointer<CChar>?, _ fmt: UnsafePointer<CChar>?, _ ap: CVaListPointer?
+) {
     guard let module, let fmt, let ap else { return }
 
     let md = String(cString: module)
@@ -54,13 +58,19 @@ public func TIFFSetErrorHandler(_ handler: @escaping TIFFErrorHandler) {
     TIFFSetErrorHandler(cErrorHandler)
 }
 
-public func TIFFSetDirectory(_ tiff: OpaquePointer?, _ dirnum: UInt32, _ diroffset: UInt64? = nil) -> Bool {
+public func TIFFSetDirectory(_ tiff: OpaquePointer?, _ dirnum: UInt32, _ diroffset: UInt64? = nil)
+    -> Bool
+{
     if let diroffset {
         guard TIFFCurrentDirOffset(tiff) != diroffset else { return true }
-        guard TIFFCurrentDirectory(tiff) != dirnum else { return TIFFSetSubDirectory(tiff, diroffset) == 1 }
+        guard TIFFCurrentDirectory(tiff) != dirnum else {
+            return TIFFSetSubDirectory(tiff, diroffset) == 1
+        }
         return TIFFSetDirectory(tiff, dirnum) == 1 && TIFFSetSubDirectory(tiff, diroffset) == 1
     } else if dirnum == 0 {
-        guard TIFFCurrentDirectory(tiff) != dirnum || TIFFCurrentDirOffset(tiff) != 8 else { return true }
+        guard TIFFCurrentDirectory(tiff) != dirnum || TIFFCurrentDirOffset(tiff) != 8 else {
+            return true
+        }
         return TIFFSetDirectory(tiff, dirnum) == 1
     } else {
         guard TIFFCurrentDirectory(tiff) != dirnum else { return true }
@@ -105,14 +115,18 @@ public func TIFFSetField<T: CVarArg>(_ tiff: OpaquePointer?, _ tag: Int32, _ val
     return success == 1
 }
 
-public func TIFFSetField<T: CVarArg, P: CVarArg>(_ tiff: OpaquePointer?, _ tag: Int32, _ value: T, _ value2: P) -> Bool {
+public func TIFFSetField<T: CVarArg, P: CVarArg>(
+    _ tiff: OpaquePointer?, _ tag: Int32, _ value: T, _ value2: P
+) -> Bool {
     let success = withVaList([value, value2]) { args in
         return TIFFVSetField(tiff, UInt32(tag), args)
     }
     return success == 1
 }
 
-public func TIFFReadJPEGImage(_ tiff: OpaquePointer?, _ dirnum: UInt32? = nil, _ diroffset: UInt64? = nil) -> [UInt8]? {
+public func TIFFReadJPEGImage(
+    _ tiff: OpaquePointer?, _ dirnum: UInt32? = nil, _ diroffset: UInt64? = nil
+) -> [UInt8]? {
     if let dirnum {
         guard TIFFSetDirectory(tiff, dirnum, diroffset) else { return nil }
     }
@@ -133,10 +147,14 @@ public func TIFFReadJPEGImage(_ tiff: OpaquePointer?, _ dirnum: UInt32? = nil, _
         var jpeg = stripSize == bufSize ? buf : Array(buf[..<stripSize])
 
         if buf.prefix(4) == [0xFF, 0xD8, 0xFF, 0xC0] {
-            let dqt: (count: UInt32?, data: UnsafeMutableRawPointer?) = TIFFGetField(tiff, TIFFTAG_JPEGTABLES)
+            let dqt: (count: UInt32?, data: UnsafeMutableRawPointer?) = TIFFGetField(
+                tiff, TIFFTAG_JPEGTABLES)
             if let count = dqt.count, let data = dqt.data {
                 // The DQT data is 0xFFDB...0xFFD9
-                jpeg.replaceSubrange(0..<2, with: UnsafeBufferPointer(start: data.assumingMemoryBound(to: UInt8.self), count: Int(count) - 2))
+                jpeg.replaceSubrange(
+                    0..<2,
+                    with: UnsafeBufferPointer(
+                        start: data.assumingMemoryBound(to: UInt8.self), count: Int(count) - 2))
             }
         }
 
