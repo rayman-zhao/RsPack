@@ -45,3 +45,45 @@ public func tjDecompressHeader(_ jpegBuf: [UInt8]) -> (width: Int, height: Int) 
         )
     }
 }
+
+/// Losslessly rotates a JPEG image and returns the rotated JPEG data.
+///
+/// The rotation is applied directly to the compressed data, so the image is
+/// never recompressed and does not lose quality. The width and height swap
+/// when rotating by an odd multiple of 90 degrees.
+///
+/// - Parameters:
+///   - jpegBuf: The JPEG image to rotate.
+///   - degrees: The clockwise rotation in degrees, normalized modulo 360, so
+///     `-90` rotates counter-clockwise by 90 degrees. Must be a multiple of 90.
+/// - Returns: The rotated JPEG image, or `nil` if `jpegBuf` could not be
+///   transformed or `degrees` is not a multiple of 90.
+public func tjRotate(_ jpegBuf: [UInt8], degrees: Int) -> [UInt8]? {
+    let op: Int32
+    switch ((degrees % 360) + 360) % 360 {
+    case 0: op = Int32(TJXOP_NONE.rawValue)
+    case 90: op = Int32(TJXOP_ROT90.rawValue)
+    case 180: op = Int32(TJXOP_ROT180.rawValue)
+    case 270: op = Int32(TJXOP_ROT270.rawValue)
+    default: return nil
+    }
+
+    let tj = tj3Init(Int32(TJINIT_TRANSFORM.rawValue))
+    defer { tj3Destroy(tj) }
+
+    var transform = tjtransform()
+    transform.op = op
+
+    var dstBuf: UnsafeMutablePointer<UInt8>?
+    defer { tj3Free(dstBuf) }
+    var dstSize: Int = 0
+
+    return jpegBuf.withUnsafeBytes { buf -> [UInt8]? in
+        guard
+            tj3Transform(
+                tj, buf.baseAddress, buf.count, 1, &dstBuf, &dstSize, &transform) == 0
+        else { return nil }
+
+        return Array(UnsafeBufferPointer(start: dstBuf, count: dstSize))
+    }
+}
