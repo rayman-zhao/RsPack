@@ -61,7 +61,7 @@ public func tjDecompressHeader(_ jpegBuf: [UInt8]) -> (width: Int, height: Int) 
 public func tjRotate(_ jpegBuf: [UInt8], degrees: Int) -> [UInt8]? {
     let op: Int32
     switch ((degrees % 360) + 360) % 360 {
-    case 0: op = Int32(TJXOP_NONE.rawValue)
+    case 0: return jpegBuf
     case 90: op = Int32(TJXOP_ROT90.rawValue)
     case 180: op = Int32(TJXOP_ROT180.rawValue)
     case 270: op = Int32(TJXOP_ROT270.rawValue)
