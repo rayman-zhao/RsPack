@@ -1,4 +1,4 @@
-// swift-tools-version: 6.3
+// swift-tools-version: 6.4
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "RsPack",
     platforms: [
-    	.macOS(.v15),
+        .macOS(.v15)
     ],
     products: [
         .library(
@@ -20,17 +20,17 @@ let package = Package(
                 "LibTIFF",
                 "LittleCMS",
             ],
-        ),
+        )
     ],
     dependencies: [
-        .package(url: "https://github.com/rayman-zhao/RsFoundation", branch: "main"),
+        .package(url: "https://github.com/rayman-zhao/RsFoundation", branch: "main")
     ],
     targets: [
         .testTarget(
-            name: "RsPackTests",         
+            name: "RsPackTests",
             dependencies: [
                 "MBL",
-            	"POLE",
+                "POLE",
                 "Zlib",
                 "LibJPEGTurbo",
                 "LibPNG",
@@ -39,30 +39,34 @@ let package = Package(
                 .product(name: "RsFoundation", package: "RsFoundation"),
             ],
             resources: [
-            	.copy("Resources/"),
+                .copy("Resources/")
             ],
         ),
         .target(
             name: "MBL",
             dependencies: [
-                "CMBL",
+                "CMBL"
             ],
         ),
         .target(
             name: "POLE",
             dependencies: [
-                "CPOLE",
+                "CPOLE"
             ],
         ),
         .target(
             name: "Zlib",
             dependencies: [
-            	.target(name: "CZlibNg_x64-windows", condition: .when(platforms: [.windows])),
+                .target(name: "CZlibNg_x64-windows", condition: .when(platforms: [.windows])),
                 .target(name: "CZlibNg_arm64-macos", condition: .when(platforms: [.macOS])),
             ],
             linkerSettings: [
-                .unsafeFlags(["-L\(Context.packageDirectory)/Sources/CZlibNg_x64-windows/Lib"], .when(platforms: [.windows])),
-                .unsafeFlags(["-L\(Context.packageDirectory)/Sources/CZlibNg_arm64-macos/Lib"], .when(platforms: [.macOS])),
+                .unsafeFlags(
+                    ["-L\(Context.packageDirectory)/Sources/CZlibNg_x64-windows/Lib"],
+                    .when(platforms: [.windows])),
+                .unsafeFlags(
+                    ["-L\(Context.packageDirectory)/Sources/CZlibNg_arm64-macos/Lib"],
+                    .when(platforms: [.macOS])),
             ],
         ),
         .target(
@@ -72,8 +76,12 @@ let package = Package(
                 .target(name: "CLibJPEGTurbo_arm64-macos", condition: .when(platforms: [.macOS])),
             ],
             linkerSettings: [
-                .unsafeFlags(["-L\(Context.packageDirectory)/Sources/CLibJPEGTurbo_x64-windows/Lib"], .when(platforms: [.windows])),
-                .unsafeFlags(["-L\(Context.packageDirectory)/Sources/CLibJPEGTurbo_arm64-macos/Lib"], .when(platforms: [.macOS])),
+                .unsafeFlags(
+                    ["-L\(Context.packageDirectory)/Sources/CLibJPEGTurbo_x64-windows/Lib"],
+                    .when(platforms: [.windows])),
+                .unsafeFlags(
+                    ["-L\(Context.packageDirectory)/Sources/CLibJPEGTurbo_arm64-macos/Lib"],
+                    .when(platforms: [.macOS])),
             ],
         ),
         .target(
@@ -83,8 +91,12 @@ let package = Package(
                 .target(name: "CLibPNG_arm64-macos", condition: .when(platforms: [.macOS])),
             ],
             linkerSettings: [
-                .unsafeFlags(["-L\(Context.packageDirectory)/Sources/CLibPNG_x64-windows/Lib"], .when(platforms: [.windows])),
-                .unsafeFlags(["-L\(Context.packageDirectory)/Sources/CLibPNG_arm64-macos/Lib"], .when(platforms: [.macOS])),
+                .unsafeFlags(
+                    ["-L\(Context.packageDirectory)/Sources/CLibPNG_x64-windows/Lib"],
+                    .when(platforms: [.windows])),
+                .unsafeFlags(
+                    ["-L\(Context.packageDirectory)/Sources/CLibPNG_arm64-macos/Lib"],
+                    .when(platforms: [.macOS])),
             ],
         ),
         .target(
@@ -95,42 +107,42 @@ let package = Package(
                 .target(name: "CLibTIFF_arm64-macos", condition: .when(platforms: [.macOS])),
             ],
             linkerSettings: [
-                .unsafeFlags(["-L\(Context.packageDirectory)/Sources/CLibTIFF_x64-windows/Lib"], .when(platforms: [.windows])),
-                .unsafeFlags(["-L\(Context.packageDirectory)/Sources/CLibTIFF_arm64-macos/Lib"], .when(platforms: [.macOS])),
+                .unsafeFlags(
+                    ["-L\(Context.packageDirectory)/Sources/CLibTIFF_x64-windows/Lib"],
+                    .when(platforms: [.windows])),
+                .unsafeFlags(
+                    ["-L\(Context.packageDirectory)/Sources/CLibTIFF_arm64-macos/Lib"],
+                    .when(platforms: [.macOS])),
             ],
         ),
         .target(
             name: "CMBL",
-            dependencies: [
-            ],
-            exclude: [
-            ],
+            dependencies: [],
+            exclude: [],
             sources: [
                 "./Sources"
             ],
-            cxxSettings: [
-            ],
+            cxxSettings: [],
         ),
         .target(
             name: "CPOLE",
-            dependencies: [
-            ],
-            exclude: [
-            ],
+            dependencies: [],
+            exclude: [],
             sources: [
                 "./Sources"
             ],
-            cxxSettings: [
-            ],
+            cxxSettings: [],
         ),
         .target(
             name: "LittleCMS",
             dependencies: [
-                .target(name: "CLittleCMS_x64-windows", condition: .when(platforms: [.windows])),
+                .target(name: "CLittleCMS_x64-windows", condition: .when(platforms: [.windows]))
                 // .target(name: "CLittleCMS_arm64-macos", condition: .when(platforms: [.macOS])),
             ],
             linkerSettings: [
-                .unsafeFlags(["-L\(Context.packageDirectory)/Sources/CLittleCMS_x64-windows/Lib"], .when(platforms: [.windows])),
+                .unsafeFlags(
+                    ["-L\(Context.packageDirectory)/Sources/CLittleCMS_x64-windows/Lib"],
+                    .when(platforms: [.windows]))
                 // .unsafeFlags(["-L\(Context.packageDirectory)/Sources/CLittleCMS_arm64-macos/Lib"], .when(platforms: [.macOS])),
             ],
         ),
