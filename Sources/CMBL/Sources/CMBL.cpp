@@ -24,9 +24,16 @@
 
 using namespace MBL::Image2D;
 
-void ScaleImage(const unsigned char *srcRGB, int srcWidth, int srcHeight, unsigned char *destRGB, int destWidth, int destHeight) {
-    ImageDef8b srcImg(IMAGE_FORMAT_RGB, const_cast<unsigned char*>(srcRGB), srcWidth, srcHeight);
+void ScaleImage(const unsigned char *srcPixels, int srcWidth, int srcHeight, unsigned char *destPixels, int destWidth, int destHeight, int channels) {
+    ImageFormat format;
+    switch (channels) {
+        case 1: format = IMAGE_FORMAT_INDEX; break;
+        case 3: format = IMAGE_FORMAT_RGB; break;
+        case 4: format = IMAGE_FORMAT_RGBA; break;
+        default: throw MBL::IllegalArgumentException();
+    }
+    ImageDef8b srcImg(format, const_cast<unsigned char*>(srcPixels), srcWidth, srcHeight);
     ImageDef8b *scaleImg = ScaleImage2Linear(&srcImg, destWidth, destHeight);
-    memcpy(destRGB, scaleImg->Pixels, GetBytesOfPixelData(scaleImg));
+    memcpy(destPixels, scaleImg->Pixels, GetBytesOfPixelData(scaleImg));
     delete scaleImg;
 }
