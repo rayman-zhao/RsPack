@@ -1,7 +1,7 @@
 import CMBL
 
 public func scaleImage(
-    _ srcPixels: [UInt8], _ srcWidth: Int, _ srcHeight: Int, _ destWidth: Int, _ destHeight: Int,
+    srcPixels: [UInt8], srcWidth: Int, srcHeight: Int, destWidth: Int, destHeight: Int,
     channels: Int = 3
 ) -> [UInt8] {
     precondition(channels == 1 || channels == 3 || channels == 4, "channels must be 1, 3, or 4")
