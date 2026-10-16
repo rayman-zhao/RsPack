@@ -11,10 +11,15 @@ public func tjCompress<T>(
 )
     -> [UInt8]
 {
+    // TJSAMP_GRAY is the only subsampling level libjpeg-turbo accepts for
+    // TJPF_GRAY input; any other level fails with "Unsupported color
+    // conversion request".
+    let subsamp = pixelFormat == TJPF_GRAY ? TJSAMP_GRAY : TJSAMP_420
+
     let tj = tj3Init(Int32(TJINIT_COMPRESS.rawValue))
     defer { tj3Destroy(tj) }
     tj3Set(tj, Int32(TJPARAM_QUALITY.rawValue), Int32(quality))
-    tj3Set(tj, Int32(TJPARAM_SUBSAMP.rawValue), TJSAMP_420.rawValue)
+    tj3Set(tj, Int32(TJPARAM_SUBSAMP.rawValue), subsamp.rawValue)
     tj3Set(tj, Int32(TJPARAM_BOTTOMUP.rawValue), flip ? 1 : 0)
 
     var jpegBuf: UnsafeMutablePointer<UInt8>?
