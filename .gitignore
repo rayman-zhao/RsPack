@@ -36,6 +36,7 @@ info.plist
 .swiftpm/
 .zcode/
 .zcodeignore
+.VSCodeCounter/
 
 #.swiftpm/configuration/registries.json
 #.swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
