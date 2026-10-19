@@ -10,39 +10,28 @@ private var warningHandler: TIFFWarningHandler?
 @MainActor
 private var errorHandler: TIFFErrorHandler?
 
+private func tiffMessage(
+    _ module: UnsafePointer<CChar>?, _ fmt: UnsafePointer<CChar>?, _ ap: CVaListPointer?
+) -> (module: String, message: String)? {
+    guard let module, let fmt, let ap else { return nil }
+    return (String(cString: module), NSString(format: String(cString: fmt), arguments: ap) as String)
+}
+
 private func cWarningHandler(
     _ module: UnsafePointer<CChar>?, _ fmt: UnsafePointer<CChar>?, _ ap: CVaListPointer?
 ) {
-    guard let module, let fmt, let ap else { return }
-
-    let md = String(cString: module)
-
-    let bufSize = 256
-    var buf = [CChar](repeating: 0, count: bufSize)
-    // TODO: var span = buf.mutableSpan
-    _ = vsnprintf(&buf, bufSize, fmt, ap)
-    if let msg = String(utf8String: buf) {
-        Task { @MainActor in
-            warningHandler?(md, msg)
-        }
+    guard let msg = tiffMessage(module, fmt, ap) else { return }
+    Task { @MainActor in
+        warningHandler?(msg.module, msg.message)
     }
 }
 
 private func cErrorHandler(
     _ module: UnsafePointer<CChar>?, _ fmt: UnsafePointer<CChar>?, _ ap: CVaListPointer?
 ) {
-    guard let module, let fmt, let ap else { return }
-
-    let md = String(cString: module)
-
-    let bufSize = 256
-    var buf = [CChar](repeating: 0, count: bufSize)
-    // TODO: var span = buf.mutableSpan
-    _ = vsnprintf(&buf, bufSize, fmt, ap)
-    if let msg = String(utf8String: buf) {
-        Task { @MainActor in
-            errorHandler?(md, msg)
-        }
+    guard let msg = tiffMessage(module, fmt, ap) else { return }
+    Task { @MainActor in
+        errorHandler?(msg.module, msg.message)
     }
 }
 
@@ -79,33 +68,23 @@ public func TIFFSetDirectory(_ tiff: OpaquePointer?, _ dirnum: UInt32, _ diroffs
 }
 
 public func TIFFGetField<T>(_ tiff: OpaquePointer?, _ tag: Int32) -> T? {
-    let pv = UnsafeMutablePointer<T>.allocate(capacity: 1)
-    defer {
-        pv.deallocate()
+    withUnsafeTemporaryAllocation(of: T.self, capacity: 1) { pv in
+        let success = withVaList([pv.baseAddress!]) { args in
+            return TIFFVGetField(tiff, UInt32(tag), args) == 1
+        }
+        return success ? pv[0] : nil
     }
-
-    let success = withVaList([pv]) { args in
-        return TIFFVGetField(tiff, UInt32(tag), args)
-    }
-
-    return success == 1 ? pv.pointee : nil
 }
 
 public func TIFFGetField<T, P>(_ tiff: OpaquePointer?, _ tag: Int32) -> (T?, P?) {
-    let pv = UnsafeMutablePointer<T>.allocate(capacity: 1)
-    defer {
-        pv.deallocate()
+    withUnsafeTemporaryAllocation(of: T.self, capacity: 1) { pv in
+        withUnsafeTemporaryAllocation(of: P.self, capacity: 1) { pv2 in
+            let success = withVaList([pv.baseAddress!, pv2.baseAddress!]) { args in
+                return TIFFVGetField(tiff, UInt32(tag), args) == 1
+            }
+            return success ? (pv[0], pv2[0]) : (nil, nil)
+        }
     }
-    let pv2 = UnsafeMutablePointer<P>.allocate(capacity: 1)
-    defer {
-        pv2.deallocate()
-    }
-
-    let success = withVaList([pv, pv2]) { args in
-        return TIFFVGetField(tiff, UInt32(tag), args)
-    }
-
-    return success == 1 ? (pv.pointee, pv2.pointee) : (nil, nil)
 }
 
 public func TIFFSetField<T: CVarArg>(_ tiff: OpaquePointer?, _ tag: Int32, _ value: T) -> Bool {
@@ -141,12 +120,13 @@ public func TIFFReadJPEGImage(
     {
         let bufSize = Int(TIFFRawStripSize(tiff, 0))
         var buf = [UInt8](repeating: 0, count: bufSize)
-        // TODO: var span = buf.mutableSpan
-        let stripSize = Int(TIFFReadRawStrip(tiff, 0, &buf, tmsize_t(bufSize)))
+        let stripSize = buf.withUnsafeMutableBytes {
+            Int(TIFFReadRawStrip(tiff, 0, $0.baseAddress, tmsize_t(bufSize)))
+        }
 
         var jpeg = stripSize == bufSize ? buf : Array(buf[..<stripSize])
 
-        if buf.prefix(4) == [0xFF, 0xD8, 0xFF, 0xC0] {
+        if jpeg.starts(with: [0xFF, 0xD8, 0xFF, 0xC0]) {
             let dqt: (count: UInt32?, data: UnsafeMutableRawPointer?) = TIFFGetField(
                 tiff, TIFFTAG_JPEGTABLES)
             if let count = dqt.count, let data = dqt.data {
@@ -166,9 +146,11 @@ public func TIFFReadJPEGImage(
     {
         let bufSize = Int(w * h)
         var buf = [UInt32](repeating: 0, count: bufSize)
-        // TODO: var span = buf.mutableSpan
 
-        if TIFFReadRGBAImageOriented(tiff, w, h, &buf, ORIENTATION_TOPLEFT, 0) == 1 {
+        let read = buf.withUnsafeMutableBufferPointer {
+            TIFFReadRGBAImageOriented(tiff, w, h, $0.baseAddress, ORIENTATION_TOPLEFT, 0) == 1
+        }
+        if read {
             return tjCompress(buf, TJPF_RGBA, Int(w), Int(h))
         }
     }

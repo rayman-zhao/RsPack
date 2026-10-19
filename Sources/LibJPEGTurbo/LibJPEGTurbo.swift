@@ -63,7 +63,7 @@ public func tjDecompressHeader(_ jpegBuf: [UInt8]) -> (width: Int, height: Int) 
 ///     `-90` rotates counter-clockwise by 90 degrees. Must be a multiple of 90.
 /// - Returns: The rotated JPEG image, or `nil` if `jpegBuf` could not be
 ///   transformed or `degrees` is not a multiple of 90.
-public func tjRotate(_ jpegBuf: [UInt8], degrees: Int) -> [UInt8]? {
+public func tjRotate(_ jpegBuf: consuming [UInt8], degrees: Int) -> [UInt8]? {
     let op: Int32
     switch ((degrees % 360) + 360) % 360 {
     case 0: return jpegBuf

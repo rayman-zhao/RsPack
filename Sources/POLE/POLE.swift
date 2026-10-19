@@ -1,7 +1,7 @@
 import CPOLE
 import Foundation
 
-public class Storage {
+public final class Storage {
     public enum Result: Int32 {
         case ok
         case openFailed
@@ -29,7 +29,7 @@ public class Storage {
     }
 
     public func result() -> Result {
-        return Result(rawValue: CStorage_result(cstorage))!
+        return Result(rawValue: CStorage_result(cstorage)) ?? .unknownError
     }
 
     public func entries(_ path: String = "/") -> [String] {
@@ -49,7 +49,7 @@ public class Storage {
     }
 }
 
-public class Stream {
+public final class Stream {
     private let cstream: UnsafeMutableRawPointer
 
     public init(_ storage: Storage, _ name: String) {
@@ -73,9 +73,14 @@ public class Stream {
         guard bufSize > 0 else { return [] }
 
         var buf = [UInt8](repeating: 0, count: bufSize)
-        let readSize = CStream_read(cstream, &buf, bufSize)
+        let readSize = buf.withUnsafeMutableBufferPointer {
+            CStream_read(cstream, $0.baseAddress, bufSize)
+        }
 
-        return readSize == bufSize ? buf : Array(buf[..<readSize])
+        if readSize < bufSize {
+            buf.removeSubrange(readSize...)
+        }
+        return buf
     }
 
     public func fail() -> Bool {
