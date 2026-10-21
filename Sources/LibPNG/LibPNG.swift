@@ -75,18 +75,44 @@ public func pngCompress<T>(
     }
 }
 
-/// Decompresses a PNG to tightly packed, top-down 8-bit pixels.
+/// Reads the pixel dimensions from a PNG header.
 ///
 /// - Parameters:
 ///   - pngBuf: The PNG data.
-///   - pixelFormat: The layout of the returned pixels; the PNG is converted to
-///     it regardless of its source color type, compositing any alpha channel
-///     onto black when the requested layout has none.
-/// - Returns: The dimensions and pixel data, or `nil` if `pngBuf` is not a
-///   valid PNG.
-public func pngDecompress(_ pngBuf: [UInt8], _ pixelFormat: PNGPixelFormat)
-    -> (width: Int, height: Int, pixels: [UInt8])?
-{
+/// - Returns: The width and height, or (-1, -1) if `pngBuf` is not a valid PNG.
+public func pngDecompressHeader(_ pngBuf: [UInt8]) -> (width: Int, height: Int) {
+    var image = png_image()
+    image.version = png_uint_32(PNG_IMAGE_VERSION)
+    defer { png_image_free(&image) }
+
+    return pngBuf.withUnsafeBytes { src in
+        guard png_image_begin_read_from_memory(&image, src.baseAddress, src.count) != 0 else {
+            return (-1, -1)
+        }
+
+        return (Int(image.width), Int(image.height))
+    }
+}
+
+/// Decompresses a PNG into a caller-provided buffer as 8-bit pixels in the
+/// requested layout.
+///
+/// The PNG is converted to the requested layout regardless of its source
+/// color type, compositing any alpha channel onto black when the layout has
+/// none. Size the buffer with `pngDecompressHeader`.
+///
+/// - Parameters:
+///   - pngBuf: The PNG data.
+///   - dstBuf: The destination buffer; needs `height * max(abs(pitch),
+///     width * pixelFormat.channels)` bytes.
+///   - pixelFormat: The layout of the output pixels.
+///   - pitch: The bytes per row in `dstBuf`; 0 means tightly packed, and a
+///     negative value stores the rows bottom-up.
+/// - Returns: true on success; false if `pngBuf` is not a valid PNG or
+///   `dstBuf` is too small.
+public func pngDecompress<T>(
+    _ pngBuf: [UInt8], _ dstBuf: inout [T], _ pixelFormat: PNGPixelFormat, _ pitch: Int = 0
+) -> Bool {
     var image = png_image()
     image.version = png_uint_32(PNG_IMAGE_VERSION)
     defer { png_image_free(&image) }
@@ -94,16 +120,18 @@ public func pngDecompress(_ pngBuf: [UInt8], _ pixelFormat: PNGPixelFormat)
     let began = pngBuf.withUnsafeBytes { src in
         png_image_begin_read_from_memory(&image, src.baseAddress, src.count) != 0
     }
-    guard began else { return nil }
+    guard began else { return false }
 
     image.format = pixelFormat.rawValue
 
-    let width = Int(image.width), height = Int(image.height)
-    var pixels = [UInt8](repeating: 0, count: width * height * pixelFormat.channels)
-    let read = pixels.withUnsafeMutableBytes { dst in
-        png_image_finish_read(&image, nil, dst.baseAddress, 0, nil) != 0
-    }
-    guard read else { return nil }
+    // png_image_finish_read only sees row_stride, not the buffer length, so
+    // reject undersized buffers up front instead of letting it write past the
+    // array.
+    let rowBytes = Int(image.width) * pixelFormat.channels
+    guard dstBuf.count * MemoryLayout<T>.stride >= Int(image.height) * max(abs(pitch), rowBytes)
+    else { return false }
 
-    return (width, height, pixels)
+    return dstBuf.withUnsafeMutableBytes { dst in
+        png_image_finish_read(&image, nil, dst.baseAddress, png_int_32(pitch), nil) != 0
+    }
 }

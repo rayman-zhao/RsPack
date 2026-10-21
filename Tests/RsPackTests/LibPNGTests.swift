@@ -26,9 +26,22 @@ func testPngCompressRGB() throws {
     #expect(png.starts(with: [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]))
 
     // PNG is lossless, so the round-trip must be byte-exact.
-    let decoded = try #require(pngDecompress(png, .rgb))
-    #expect(decoded.width == width && decoded.height == height)
-    #expect(decoded.pixels == rgb)
+    var pixels = [UInt8](repeating: 0, count: width * height * 3)
+    #expect(pngDecompress(png, &pixels, .rgb))
+    #expect(pixels == rgb)
+
+    // A padded destination pitch must place each row at the strided offset.
+    let dstPitch = rowBytes + 3
+    var pitched = [UInt8](repeating: 0xFF, count: dstPitch * height)
+    #expect(pngDecompress(png, &pitched, .rgb, dstPitch))
+    var strided = [UInt8](repeating: 0, count: rowBytes * height)
+    for row in 0..<height {
+        let dst = row * dstPitch
+        let src = row * rowBytes
+        strided.replaceSubrange(src..<src + rowBytes, with: pitched[dst..<dst + rowBytes])
+    }
+    #expect(strided == rgb)
+    #expect(Array(pitched[rowBytes..<dstPitch]) == [0xFF, 0xFF, 0xFF])
 }
 
 @Test
@@ -40,9 +53,9 @@ func testPngCompressGray() throws {
     let png = pngCompress(gray, .gray, width, height)
     #expect(!png.isEmpty)
 
-    let decoded = try #require(pngDecompress(png, .gray))
-    #expect(decoded.width == width && decoded.height == height)
-    #expect(decoded.pixels == gray)
+    var pixels = [UInt8](repeating: 0, count: width * height)
+    #expect(pngDecompress(png, &pixels, .gray))
+    #expect(pixels == gray)
 }
 
 @Test
@@ -60,8 +73,9 @@ func testPngCompressBGR() throws {
     let png = pngCompress(bgr, .bgr, width, height)
 
     // Reading back as RGB must undo the BGR channel order.
-    let decoded = try #require(pngDecompress(png, .rgb))
-    #expect(decoded.pixels == rgb)
+    var pixels = [UInt8](repeating: 0, count: width * height * 3)
+    #expect(pngDecompress(png, &pixels, .rgb))
+    #expect(pixels == rgb)
 }
 
 @Test
@@ -77,8 +91,23 @@ func testPngCompressFlip() throws {
         (0..<height).flatMap { row in
             [UInt8](repeating: UInt8((height - 1 - row) * 40), count: width)
         })
-    let decoded = try #require(pngDecompress(png, .gray))
-    #expect(decoded.pixels == topDown)
+    var pixels = [UInt8](repeating: 0, count: width * height)
+    #expect(pngDecompress(png, &pixels, .gray))
+    #expect(pixels == topDown)
+}
+
+@Test
+func testPngDecompressHeader() {
+    let width = 345, height = 678
+    let rgb = [UInt8](repeating: 128, count: width * height * 3)
+    let png = pngCompress(rgb, .rgb, width, height)
+
+    let (w, h) = pngDecompressHeader(png)
+    #expect(w == width && h == height)
+
+    let corrupt = [UInt8](repeating: 0xFF, count: 100)
+    let (cw, ch) = pngDecompressHeader(corrupt)
+    #expect(cw == -1 && ch == -1)
 }
 
 @Test
@@ -91,20 +120,19 @@ func testPngDecompressGrayAsRGB() throws {
 
     // The requested layout applies regardless of the source color type:
     // grayscale expands to R = G = B per pixel.
-    let decoded = try #require(pngDecompress(png, .rgb))
-    #expect(decoded.width == width && decoded.height == height)
-    #expect(decoded.pixels == [UInt8](gray.flatMap { g in [g, g, g] }))
+    var pixels = [UInt8](repeating: 0, count: width * height * 3)
+    #expect(pngDecompress(png, &pixels, .rgb))
+    #expect(pixels == [UInt8](gray.flatMap { g in [g, g, g] }))
 }
 
 @Test
 func testPngDecompressInvalidInput() {
-    let corrupt = [UInt8](repeating: 0xFF, count: 100)
-    #expect(pngDecompress(corrupt, .rgb) == nil)
-}
+    var pixels = [UInt8](repeating: 0, count: 100)
 
-@Test
-func testPngCompressInvalidInput() {
-    let rgb = [UInt8](repeating: 0, count: 100)
-    #expect(pngCompress(rgb, .rgb, 0, 10).isEmpty)
-    #expect(pngCompress(rgb, .rgb, 10, 10).isEmpty)
+    let corrupt = [UInt8](repeating: 0xFF, count: 100)
+    #expect(!pngDecompress(corrupt, &pixels, .rgb))
+
+    // A buffer smaller than the image is rejected without writing.
+    let png = pngCompress([UInt8](repeating: 7, count: 16 * 8), .gray, 16, 8)
+    #expect(!pngDecompress(png, &pixels, .gray))
 }
