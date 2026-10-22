@@ -58,6 +58,56 @@ func testPngCompressGray() throws {
 }
 
 @Test
+func testPngCompress2() throws {
+    let width = 7, height = 5
+    let rowBytes = width * 3
+    let rgb = [UInt8]((0..<width * height * 3).map { UInt8(($0 * 11 + 5) % 256) })
+
+    // A padded pitch exercises the row-stride path of the low-level writer.
+    let pitch = rowBytes + 2
+    var padded = [UInt8](repeating: 0xA5, count: pitch * height)
+    for row in 0..<height {
+        let dst = row * pitch, src = row * rowBytes
+        padded.replaceSubrange(dst..<(dst + rowBytes), with: rgb[src..<(src + rowBytes)])
+    }
+
+    let png = try #require(pngCompress2(padded, .rgb, width, height, pitch))
+    var pixels = [UInt8](repeating: 0, count: rowBytes * height)
+    #expect(pngDecompress(png, &pixels, .rgb))
+    #expect(pixels == rgb)
+
+    // Bottom-up source rows come out top-down.
+    let flipped = try #require(pngCompress2(rgb, .rgb, width, height, 0, true))
+    var out = [UInt8](repeating: 0, count: rowBytes * height)
+    #expect(pngDecompress(flipped, &out, .rgb))
+    var reversed = [UInt8]()
+    for row in 0..<height {
+        let src = (height - 1 - row) * rowBytes
+        reversed.append(contentsOf: rgb[src..<(src + rowBytes)])
+    }
+    #expect(out == reversed)
+}
+
+@Test
+func testPngCompressBGRA() throws {
+    let width = 64, height = 32
+    let rgba = [UInt8]((0..<width * height * 4).map { UInt8(($0 * 7 + 13) % 256) })
+
+    var bgra = rgba
+    for px in 0..<(width * height) {
+        let i = px * 4
+        bgra[i] = rgba[i + 2]
+        bgra[i + 2] = rgba[i]
+    }
+
+    let png = try #require(pngCompress2(bgra, .bgra, width, height))
+
+    var pixels = [UInt8](repeating: 0, count: width * height * 4)
+    #expect(pngDecompress(png, &pixels, .rgba))
+    #expect(pixels == rgba)
+}
+
+@Test
 func testPngCompressBGR() throws {
     let width = 64, height = 32
     let rgb = [UInt8]((0..<width * height * 3).map { UInt8(($0 * 7 + 13) % 256) })

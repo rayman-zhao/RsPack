@@ -87,6 +87,7 @@ let package = Package(
         .target(
             name: "LibPNG",
             dependencies: [
+                "Zlib",
                 .target(name: "CLibPNG_x64-windows", condition: .when(platforms: [.windows])),
                 .target(name: "CLibPNG_arm64-macos", condition: .when(platforms: [.macOS])),
             ],
