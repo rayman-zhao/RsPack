@@ -126,13 +126,23 @@ func testPngDecompressGrayAsRGB() throws {
 }
 
 @Test
+func testPngDecompressAtOffset() throws {
+    // Two 4x2 gray tiles stitched side by side into an 8x2 layer: decoding
+    // at an offset with a layer-wide pitch must place the rows in situ, the
+    // way tj3Decompress8 places JPEG tiles.
+    let pngL = pngCompress([UInt8]([10, 11, 12, 13, 14, 15, 16, 17]), .gray, 4, 2)
+    let pngR = pngCompress([UInt8]([20, 21, 22, 23, 24, 25, 26, 27]), .gray, 4, 2)
+
+    var layer = [UInt8](repeating: 0, count: 8 * 2)
+    #expect(pngDecompress(pngL, &layer[0], .gray, 8))
+    #expect(pngDecompress(pngR, &layer[4], .gray, 8))
+    #expect(layer == [10, 11, 12, 13, 20, 21, 22, 23, 14, 15, 16, 17, 24, 25, 26, 27])
+}
+
+@Test
 func testPngDecompressInvalidInput() {
     var pixels = [UInt8](repeating: 0, count: 100)
 
     let corrupt = [UInt8](repeating: 0xFF, count: 100)
     #expect(!pngDecompress(corrupt, &pixels, .rgb))
-
-    // A buffer smaller than the image is rejected without writing.
-    let png = pngCompress([UInt8](repeating: 7, count: 16 * 8), .gray, 16, 8)
-    #expect(!pngDecompress(png, &pixels, .gray))
 }

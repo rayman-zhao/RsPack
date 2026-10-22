@@ -94,24 +94,28 @@ public func pngDecompressHeader(_ pngBuf: [UInt8]) -> (width: Int, height: Int) 
     }
 }
 
-/// Decompresses a PNG into a caller-provided buffer as 8-bit pixels in the
+/// Decompresses a PNG into caller-provided memory as 8-bit pixels in the
 /// requested layout.
 ///
 /// The PNG is converted to the requested layout regardless of its source
 /// color type, compositing any alpha channel onto black when the layout has
-/// none. Size the buffer with `pngDecompressHeader`.
+/// none. `dst` may point into the middle of a larger buffer — a tile inside
+/// a stitched layer image, for example — the way `tj3Decompress8` places
+/// JPEG tiles. Like `tj3Decompress8`, the destination extent is the caller's
+/// responsibility; size it with `pngDecompressHeader` when the dimensions
+/// are unknown.
 ///
 /// - Parameters:
 ///   - pngBuf: The PNG data.
-///   - dstBuf: The destination buffer; needs `height * max(abs(pitch),
-///     width * pixelFormat.channels)` bytes.
+///   - dst: The destination memory.
 ///   - pixelFormat: The layout of the output pixels.
-///   - pitch: The bytes per row in `dstBuf`; 0 means tightly packed, and a
+///   - pitch: The bytes per row at `dst`; 0 means tightly packed, and a
 ///     negative value stores the rows bottom-up.
-/// - Returns: true on success; false if `pngBuf` is not a valid PNG or
-///   `dstBuf` is too small.
-public func pngDecompress<T>(
-    _ pngBuf: [UInt8], _ dstBuf: inout [T], _ pixelFormat: PNGPixelFormat, _ pitch: Int = 0
+/// - Returns: true on success; false if `pngBuf` is not a valid PNG.
+public func pngDecompress(
+    _ pngBuf: [UInt8],
+    _ dst: UnsafeMutablePointer<UInt8>,
+    _ pixelFormat: PNGPixelFormat, _ pitch: Int = 0
 ) -> Bool {
     var image = png_image()
     image.version = png_uint_32(PNG_IMAGE_VERSION)
@@ -123,15 +127,5 @@ public func pngDecompress<T>(
     guard began else { return false }
 
     image.format = pixelFormat.rawValue
-
-    // png_image_finish_read only sees row_stride, not the buffer length, so
-    // reject undersized buffers up front instead of letting it write past the
-    // array.
-    let rowBytes = Int(image.width) * pixelFormat.channels
-    guard dstBuf.count * MemoryLayout<T>.stride >= Int(image.height) * max(abs(pitch), rowBytes)
-    else { return false }
-
-    return dstBuf.withUnsafeMutableBytes { dst in
-        png_image_finish_read(&image, nil, dst.baseAddress, png_int_32(pitch), nil) != 0
-    }
+    return png_image_finish_read(&image, nil, dst, png_int_32(pitch), nil) != 0
 }
