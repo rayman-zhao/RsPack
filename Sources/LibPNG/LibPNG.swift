@@ -31,19 +31,17 @@ public enum PNGPixelFormat: png_uint_32 {
 ///   - height: The image height in pixels.
 ///   - pitch: The bytes per row; 0 means tightly packed.
 ///   - flip: Pass true when the rows in `srcBuf` are stored bottom-up.
-/// - Returns: The PNG data, or an empty array if compression failed.
+/// - Returns: The PNG data, or `nil` if compression failed.
 public func pngCompress<T>(
     _ srcBuf: [T], _ pixelFormat: PNGPixelFormat, _ width: Int, _ height: Int, _ pitch: Int = 0,
     _ flip: Bool = false
-)
-    -> [UInt8]
-{
+) -> [UInt8]? {
     let rowBytes = width * pixelFormat.channels
     // libpng only sees row_stride, not the buffer length, so reject mismatched
     // buffers up front instead of letting it read out of bounds.
     guard width > 0, height > 0,
         srcBuf.count * MemoryLayout<T>.stride >= height * max(abs(pitch), rowBytes)
-    else { return [] }
+    else { return nil }
 
     var image = png_image()
     image.version = png_uint_32(PNG_IMAGE_VERSION)
@@ -62,14 +60,14 @@ public func pngCompress<T>(
         guard
             png_image_write_to_memory(&image, nil, &size, 0, src.baseAddress, rowStride, nil) != 0,
             size > 0
-        else { return [] }
+        else { return nil }
 
         var png = [UInt8](repeating: 0, count: Int(size))
         let written = png.withUnsafeMutableBytes { dst in
             png_image_write_to_memory(
                 &image, dst.baseAddress, &size, 0, src.baseAddress, rowStride, nil) != 0
         }
-        guard written else { return [] }
+        guard written else { return nil }
         if size < png.count { png.removeSubrange(Int(size)...) }
         return png
     }

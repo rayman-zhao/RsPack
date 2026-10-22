@@ -22,7 +22,7 @@ func testPngCompressRGB() throws {
         padded.replaceSubrange(dst..<dst + rowBytes, with: rgb[src..<src + rowBytes])
     }
 
-    let png = pngCompress(padded, .rgb, width, height, pitch)
+    let png = try #require(pngCompress(padded, .rgb, width, height, pitch))
     #expect(png.starts(with: [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]))
 
     // PNG is lossless, so the round-trip must be byte-exact.
@@ -50,8 +50,7 @@ func testPngCompressGray() throws {
     let row = (0..<width).map { UInt8(($0 * 255) / max(width - 1, 1)) }
     let gray = [UInt8]((0..<height).flatMap { _ in row })
 
-    let png = pngCompress(gray, .gray, width, height)
-    #expect(!png.isEmpty)
+    let png = try #require(pngCompress(gray, .gray, width, height))
 
     var pixels = [UInt8](repeating: 0, count: width * height)
     #expect(pngDecompress(png, &pixels, .gray))
@@ -70,7 +69,7 @@ func testPngCompressBGR() throws {
         bgr[i + 2] = rgb[i]
     }
 
-    let png = pngCompress(bgr, .bgr, width, height)
+    let png = try #require(pngCompress(bgr, .bgr, width, height))
 
     // Reading back as RGB must undo the BGR channel order.
     var pixels = [UInt8](repeating: 0, count: width * height * 3)
@@ -85,7 +84,7 @@ func testPngCompressFlip() throws {
     let bottomUp = [UInt8](
         (0..<height).flatMap { row in [UInt8](repeating: UInt8(row * 40), count: width) })
 
-    let png = pngCompress(bottomUp, .gray, width, height, 0, true)
+    let png = try #require(pngCompress(bottomUp, .gray, width, height, 0, true))
 
     let topDown = [UInt8](
         (0..<height).flatMap { row in
@@ -97,10 +96,10 @@ func testPngCompressFlip() throws {
 }
 
 @Test
-func testPngDecompressHeader() {
+func testPngDecompressHeader() throws {
     let width = 345, height = 678
     let rgb = [UInt8](repeating: 128, count: width * height * 3)
-    let png = pngCompress(rgb, .rgb, width, height)
+    let png = try #require(pngCompress(rgb, .rgb, width, height))
 
     let (w, h) = pngDecompressHeader(png)
     #expect(w == width && h == height)
@@ -116,7 +115,7 @@ func testPngDecompressGrayAsRGB() throws {
     let row = (0..<width).map { UInt8(($0 * 255) / max(width - 1, 1)) }
     let gray = [UInt8]((0..<height).flatMap { _ in row })
 
-    let png = pngCompress(gray, .gray, width, height)
+    let png = try #require(pngCompress(gray, .gray, width, height))
 
     // The requested layout applies regardless of the source color type:
     // grayscale expands to R = G = B per pixel.
@@ -130,8 +129,8 @@ func testPngDecompressAtOffset() throws {
     // Two 4x2 gray tiles stitched side by side into an 8x2 layer: decoding
     // at an offset with a layer-wide pitch must place the rows in situ, the
     // way tj3Decompress8 places JPEG tiles.
-    let pngL = pngCompress([UInt8]([10, 11, 12, 13, 14, 15, 16, 17]), .gray, 4, 2)
-    let pngR = pngCompress([UInt8]([20, 21, 22, 23, 24, 25, 26, 27]), .gray, 4, 2)
+    let pngL = try #require(pngCompress([UInt8]([10, 11, 12, 13, 14, 15, 16, 17]), .gray, 4, 2))
+    let pngR = try #require(pngCompress([UInt8]([20, 21, 22, 23, 24, 25, 26, 27]), .gray, 4, 2))
 
     var layer = [UInt8](repeating: 0, count: 8 * 2)
     #expect(pngDecompress(pngL, &layer[0], .gray, 8))

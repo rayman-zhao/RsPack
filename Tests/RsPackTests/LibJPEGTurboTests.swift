@@ -11,7 +11,7 @@ func testLibJPEGTurbo() async throws {
     tj3Destroy(tj2)
 
     let rgb = [UInt8](repeating: 0, count: 345 * 678 * 3)
-    let jpg = tjCompress(rgb, TJPF_RGB, 345, 678)
+    let jpg = try #require(tjCompress(rgb, TJPF_RGB, 345, 678))
 
     let (w, h) = tjDecompressHeader(jpg)
     #expect(w == 345 && h == 678)
@@ -25,8 +25,7 @@ func testTjCompressGray() throws {
     let row = (0..<width).map { UInt8(($0 * 255) / max(width - 1, 1)) }
     let gray = [UInt8]((0..<height).flatMap { _ in row })
 
-    let jpg = tjCompress(gray, TJPF_GRAY, width, height)
-    #expect(!jpg.isEmpty)
+    let jpg = try #require(tjCompress(gray, TJPF_GRAY, width, height))
 
     let (w, h) = tjDecompressHeader(jpg)
     #expect(w == width && h == height)
@@ -55,8 +54,7 @@ func testTjCompressGray() throws {
 @Test
 func testTjRotate() throws {
     let rgb = [UInt8](repeating: 128, count: 345 * 678 * 3)
-    let jpg = tjCompress(rgb, TJPF_RGB, 345, 678)
-    #expect(!jpg.isEmpty)
+    let jpg = try #require(tjCompress(rgb, TJPF_RGB, 345, 678))
 
     let clockwise = try #require(tjRotate(jpg, degrees: 90))
     let (cw, ch) = tjDecompressHeader(clockwise)

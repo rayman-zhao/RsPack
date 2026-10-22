@@ -8,9 +8,7 @@ public func tjGetErrorStr(_ handle: tjhandle?) -> String {
 public func tjCompress<T>(
     _ srcBuf: [T], _ pixelFormat: TJPF, _ width: Int, _ height: Int, _ pitch: Int = 0,
     _ quality: Int = 85, _ flip: Bool = false
-)
-    -> [UInt8]
-{
+) -> [UInt8]? {
     // TJSAMP_GRAY is the only subsampling level libjpeg-turbo accepts for
     // TJPF_GRAY input; any other level fails with "Unsupported color
     // conversion request".
@@ -31,7 +29,7 @@ public func tjCompress<T>(
             tj3Compress8(
                 tj, buf.baseAddress, Int32(width), Int32(pitch), Int32(height),
                 pixelFormat.rawValue, &jpegBuf, &jpegSize) == 0
-        else { return [] }
+        else { return nil }
 
         return Array(UnsafeBufferPointer(start: jpegBuf, count: jpegSize))
     }
