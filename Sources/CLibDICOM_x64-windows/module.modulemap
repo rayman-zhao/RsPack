@@ -1,0 +1,9 @@
+//git clone --branch v1.3.0 https://github.com/ImagingDataCommons/libdicom
+//meson setup build --buildtype release --default-library static -Dtests=false
+//meson compile -C build
+
+module CLibDICOM [system] {
+    header "Include/dicom.h"
+    link "dicom"
+    export *
+}

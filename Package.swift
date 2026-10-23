@@ -15,6 +15,7 @@ let package = Package(
                 "MBL",
                 "POLE",
                 "Zlib",
+                "LibDICOM",
                 "LibJPEGTurbo",
                 "LibPNG",
                 "LibTIFF",
@@ -32,6 +33,7 @@ let package = Package(
                 "MBL",
                 "POLE",
                 "Zlib",
+                "LibDICOM",
                 "LibJPEGTurbo",
                 "LibPNG",
                 "LibTIFF",
@@ -135,6 +137,19 @@ let package = Package(
             cxxSettings: [],
         ),
         .target(
+            name: "LibDICOM",
+            dependencies: [
+                .target(name: "CLibDICOM_x64-windows", condition: .when(platforms: [.windows]))
+                // .target(name: "CLibDICOM_arm64-macos", condition: .when(platforms: [.macOS])),
+            ],
+            linkerSettings: [
+                .unsafeFlags(
+                    ["-L\(Context.packageDirectory)/Sources/CLibDICOM_x64-windows/Lib"],
+                    .when(platforms: [.windows]))
+                // .unsafeFlags(["-L\(Context.packageDirectory)/Sources/CLibDICOM_arm64-macos/Lib"], .when(platforms: [.macOS])),
+            ],
+        ),
+        .target(
             name: "LittleCMS",
             dependencies: [
                 .target(name: "CLittleCMS_x64-windows", condition: .when(platforms: [.windows]))
@@ -176,6 +191,12 @@ let package = Package(
         ),
         // .systemLibrary(
         //     name: "CLittleCMS_arm64-macos",
+        // ),
+        .systemLibrary(
+            name: "CLibDICOM_x64-windows",
+        ),
+        // .systemLibrary(
+        //     name: "CLibDICOM_arm64-macos",
         // ),
     ]
 )
