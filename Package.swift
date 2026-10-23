@@ -139,7 +139,8 @@ let package = Package(
         .target(
             name: "LibDICOM",
             dependencies: [
-                .target(name: "CLibDICOM_x64-windows", condition: .when(platforms: [.windows]))
+                .target(name: "CLibDICOM_x64-windows", condition: .when(platforms: [.windows])),
+                .product(name: "RsFoundation", package: "RsFoundation")
                 // .target(name: "CLibDICOM_arm64-macos", condition: .when(platforms: [.macOS])),
             ],
             linkerSettings: [
