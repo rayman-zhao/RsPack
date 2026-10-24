@@ -1,6 +1,7 @@
-@_exported import CLibDICOM
 import Foundation
 import RsFoundation
+
+@_exported import CLibDICOM
 
 /// Tag numbers of the elements the LibDICOM helpers read, resolved through the
 /// library's own dictionary.
@@ -65,15 +66,12 @@ public final class DCMFile {
         dcm_filehandle_destroy(handle)
     }
 
-    public func stringValue(_ tag: UInt32, index: UInt32 = 0, in dataset: OpaquePointer? = nil)
-        -> String?
-    {
+    public func stringValue(_ tag: UInt32, index: UInt32 = 0, in dataset: OpaquePointer? = nil) -> String? {
         guard let element = element(tag, dataset) else { return nil }
         return string(element, index: index)
     }
 
-    public func intValue(_ tag: UInt32, index: UInt32 = 0, in dataset: OpaquePointer? = nil) -> Int?
-    {
+    public func intValue(_ tag: UInt32, index: UInt32 = 0, in dataset: OpaquePointer? = nil) -> Int? {
         guard let element = element(tag, dataset) else { return nil }
 
         var error: OpaquePointer?
@@ -90,9 +88,7 @@ public final class DCMFile {
         return nil
     }
 
-    public func decimalValue(_ tag: UInt32, index: UInt32 = 0, in dataset: OpaquePointer? = nil)
-        -> Double?
-    {
+    public func decimalValue(_ tag: UInt32, index: UInt32 = 0, in dataset: OpaquePointer? = nil) -> Double? {
         guard let element = element(tag, dataset) else { return nil }
 
         var error: OpaquePointer?
@@ -152,11 +148,11 @@ public final class DCMFile {
     /// (`VOLUME`, `LABEL`, `OVERVIEW`, `THUMBNAIL`); nil when the file has fewer
     /// than three values.
     public var role: String? {
-        stringValue(tagImageType, index: 2)
+        stringValue(DCMTag.imageType, index: 2)
     }
 
     public var studyUID: String? {
-        stringValue(tagStudyInstanceUID)
+        stringValue(DCMTag.studyInstanceUID)
     }
 
     /// One-based frame number of the tile at a (column, row) position, taking
