@@ -143,7 +143,7 @@ public func TIFFReadJPEGImage(
         return jpeg
     }
 
-    if let image = TIFFReadRGBAImage(tiff, dirnum, diroffset) {
+    if let image = TIFFReadRGBAImage(tiff) {
         return tjCompress(image.pixels, TJPF_RGBA, image.width, image.height)
     }
 
@@ -163,15 +163,23 @@ public func TIFFReadRGBAImage(
     let tileWidth: UInt32? = TIFFGetField(tiff, TIFFTAG_TILEWIDTH)
     guard tileWidth == nil else { return nil }
 
+    return TIFFReadRGBAImage(tiff)
+}
+
+private func TIFFReadRGBAImage(_ tiff: OpaquePointer?) -> (
+    pixels: [UInt32], width: Int, height: Int
+)? {
     guard let w: UInt32 = TIFFGetField(tiff, TIFFTAG_IMAGEWIDTH),
         let h: UInt32 = TIFFGetField(tiff, TIFFTAG_IMAGELENGTH)
     else { return nil }
 
-    var pixels = [UInt32](repeating: 0, count: Int(w) * Int(h))
+    let width = Int(w)
+    let height = Int(h)
+    var pixels = [UInt32](repeating: 0, count: width * height)
     let read = pixels.withUnsafeMutableBufferPointer {
         TIFFReadRGBAImageOriented(tiff, w, h, $0.baseAddress, ORIENTATION_TOPLEFT, 0) == 1
     }
     guard read else { return nil }
 
-    return (pixels, Int(w), Int(h))
+    return (pixels, width, height)
 }
