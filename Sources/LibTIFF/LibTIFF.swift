@@ -149,10 +149,22 @@ public func TIFFReadJPEGStrip(
     return nil
 }
 
+public struct RGBAImage {
+    public let pixels: [UInt32]
+    public let width: Int
+    public let height: Int
+
+    public init(pixels: [UInt32], width: Int, height: Int) {
+        self.pixels = pixels
+        self.width = width
+        self.height = height
+    }
+}
+
 /// Reads a page as raw RGBA pixels (top-left oriented, memory order R,G,B,A per pixel) or nil on failure.
 public func TIFFReadRGBAStrip(
     _ tiff: OpaquePointer?, _ dirnum: UInt32? = nil, _ diroffset: UInt64? = nil
-) -> (pixels: [UInt32], width: Int, height: Int)? {
+) -> RGBAImage? {
     if let dirnum {
         guard TIFFSetDirectory(tiff, dirnum, diroffset) else { return nil }
     }
@@ -162,11 +174,9 @@ public func TIFFReadRGBAStrip(
     return TIFFReadRGBAImage(tiff)
 }
 
-public func TIFFReadRGBAImage(_ tiff: OpaquePointer?, _ orientation: Int32 = ORIENTATION_TOPLEFT)
-    -> (
-        pixels: [UInt32], width: Int, height: Int
-    )?
-{
+public func TIFFReadRGBAImage(
+    _ tiff: OpaquePointer?, _ orientation: Int32 = ORIENTATION_TOPLEFT
+) -> RGBAImage? {
     guard let w: UInt32 = TIFFGetField(tiff, TIFFTAG_IMAGEWIDTH),
         let h: UInt32 = TIFFGetField(tiff, TIFFTAG_IMAGELENGTH)
     else { return nil }
@@ -179,5 +189,5 @@ public func TIFFReadRGBAImage(_ tiff: OpaquePointer?, _ orientation: Int32 = ORI
     }
     guard read else { return nil }
 
-    return (pixels, width, height)
+    return RGBAImage(pixels: pixels, width: width, height: height)
 }
