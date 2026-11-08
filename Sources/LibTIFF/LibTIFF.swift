@@ -105,13 +105,12 @@ public func TIFFSetField<T: CVarArg, P: CVarArg>(
     return success == 1
 }
 
-public func TIFFReadJPEGImage(
+public func TIFFReadJPEGStrip(
     _ tiff: OpaquePointer?, _ dirnum: UInt32? = nil, _ diroffset: UInt64? = nil
 ) -> [UInt8]? {
     if let dirnum {
         guard TIFFSetDirectory(tiff, dirnum, diroffset) else { return nil }
     }
-
     let tileWidth: UInt32? = TIFFGetField(tiff, TIFFTAG_TILEWIDTH)
     guard tileWidth == nil else { return nil }
 
@@ -143,18 +142,15 @@ public func TIFFReadJPEGImage(
         return jpeg
     }
 
-    if let image = TIFFReadRGBAImage(tiff) {
+    if let image = TIFFReadRGBAStrip(tiff) {
         return tjCompress(image.pixels, TJPF_RGBA, image.width, image.height)
     }
 
     return nil
 }
 
-/// Reads a page as raw RGBA pixels (top-left oriented, memory order R,G,B,A per
-/// pixel) or nil on failure. Tiled pages are declined, mirroring
-/// `TIFFReadJPEGImage`: tiles are the pyramid's domain (full-resolution
-/// rasters), while preview/macro/label pages are strips.
-public func TIFFReadRGBAImage(
+/// Reads a page as raw RGBA pixels (top-left oriented, memory order R,G,B,A per pixel) or nil on failure.
+public func TIFFReadRGBAStrip(
     _ tiff: OpaquePointer?, _ dirnum: UInt32? = nil, _ diroffset: UInt64? = nil
 ) -> (pixels: [UInt32], width: Int, height: Int)? {
     if let dirnum {
@@ -166,9 +162,11 @@ public func TIFFReadRGBAImage(
     return TIFFReadRGBAImage(tiff)
 }
 
-private func TIFFReadRGBAImage(_ tiff: OpaquePointer?) -> (
-    pixels: [UInt32], width: Int, height: Int
-)? {
+public func TIFFReadRGBAImage(_ tiff: OpaquePointer?, _ orientation: Int32 = ORIENTATION_TOPLEFT)
+    -> (
+        pixels: [UInt32], width: Int, height: Int
+    )?
+{
     guard let w: UInt32 = TIFFGetField(tiff, TIFFTAG_IMAGEWIDTH),
         let h: UInt32 = TIFFGetField(tiff, TIFFTAG_IMAGELENGTH)
     else { return nil }
@@ -177,7 +175,7 @@ private func TIFFReadRGBAImage(_ tiff: OpaquePointer?) -> (
     let height = Int(h)
     var pixels = [UInt32](repeating: 0, count: width * height)
     let read = pixels.withUnsafeMutableBufferPointer {
-        TIFFReadRGBAImageOriented(tiff, w, h, $0.baseAddress, ORIENTATION_TOPLEFT, 0) == 1
+        TIFFReadRGBAImageOriented(tiff, w, h, $0.baseAddress, orientation, 0) == 1
     }
     guard read else { return nil }
 
