@@ -35,6 +35,70 @@ public func tjCompress<T>(
     }
 }
 
+/// Decompresses a JPEG image into a caller-provided buffer — no intermediate
+/// allocation.
+///
+/// - Parameters:
+///   - jpegBuf: The JPEG image.
+///   - pixelFormat: The pixel layout of the output.
+///   - dstBuf: A buffer of at least `pitch * height` bytes (height comes from
+///     the JPEG header; probe with `tjDecompressHeader` first).
+///   - pitch: Bytes per output row; 0 means tightly packed
+///     (`width * pixel size`).
+///   - flip: Emit rows bottom-up (Windows bitmap raster order).
+/// - Returns: The decompressed image dimensions, or `nil` on failure.
+@discardableResult
+public func tjDecompress(
+    _ jpegBuf: [UInt8], _ pixelFormat: TJPF, into dstBuf: UnsafeMutableRawPointer, _ pitch: Int,
+    _ flip: Bool = false
+) -> (width: Int, height: Int)? {
+    let tj = tj3Init(Int32(TJINIT_DECOMPRESS.rawValue))
+    defer { tj3Destroy(tj) }
+
+    tj3Set(tj, Int32(TJPARAM_BOTTOMUP.rawValue), flip ? 1 : 0)
+
+    let ok = jpegBuf.withUnsafeBytes { src in
+        tj3Decompress8(
+            tj, src.baseAddress, src.count,
+            dstBuf.assumingMemoryBound(to: UInt8.self), Int32(pitch),
+            pixelFormat.rawValue) == 0
+    }
+    guard ok else { return nil }
+    return (
+        Int(tj3Get(tj, TJPARAM_JPEGWIDTH.rawValue)),
+        Int(tj3Get(tj, TJPARAM_JPEGHEIGHT.rawValue))
+    )
+}
+
+/// Decompresses a JPEG image into a fresh pixel array.
+///
+/// - Parameters:
+///   - jpegBuf: The JPEG image.
+///   - pixelFormat: The pixel layout of the output.
+///   - pitch: Bytes per output row; 0 means tightly packed
+///     (`width * pixel size`).
+///   - flip: Emit rows bottom-up (Windows bitmap raster order).
+/// - Returns: The pixel buffer and dimensions, or `nil` on failure.
+public func tjDecompress(
+    _ jpegBuf: [UInt8], _ pixelFormat: TJPF, _ pitch: Int = 0, _ flip: Bool = false
+) -> (pixels: [UInt8], width: Int, height: Int)? {
+    let header = tjDecompressHeader(jpegBuf)
+    guard header.width > 0, header.height > 0 else { return nil }
+
+    let pixelSize: Int
+    switch pixelFormat {
+    case TJPF_GRAY: pixelSize = 1
+    case TJPF_RGB, TJPF_BGR: pixelSize = 3
+    default: pixelSize = 4
+    }
+    let rowBytes = pitch > 0 ? pitch : header.width * pixelSize
+    var pixels = [UInt8](repeating: 0, count: rowBytes * header.height)
+    guard let dims = tjDecompress(jpegBuf, pixelFormat, into: &pixels, rowBytes, flip) else {
+        return nil
+    }
+    return (pixels, dims.width, dims.height)
+}
+
 public func tjDecompressHeader(_ jpegBuf: [UInt8]) -> (width: Int, height: Int) {
     let tj = tj3Init(Int32(TJINIT_DECOMPRESS.rawValue))
     defer { tj3Destroy(tj) }
