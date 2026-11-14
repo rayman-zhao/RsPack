@@ -19,6 +19,7 @@ let package = Package(
                 "LibJPEGTurbo",
                 "LibPNG",
                 "LibTIFF",
+                "LibOpenJPEG",
                 "LittleCMS",
             ],
         )
@@ -37,6 +38,7 @@ let package = Package(
                 "LibJPEGTurbo",
                 "LibPNG",
                 "LibTIFF",
+                "LibOpenJPEG",
                 "LittleCMS",
                 .product(name: "RsFoundation", package: "RsFoundation"),
             ],
@@ -137,6 +139,19 @@ let package = Package(
             cxxSettings: [],
         ),
         .target(
+            name: "LibOpenJPEG",
+            dependencies: [
+                .target(name: "COpenJPEG_x64-windows", condition: .when(platforms: [.windows]))
+                // .target(name: "COpenJPEG_arm64-macos", condition: .when(platforms: [.macOS])),
+            ],
+            linkerSettings: [
+                .unsafeFlags(
+                    ["-L\(Context.packageDirectory)/Sources/COpenJPEG_x64-windows/Lib"],
+                    .when(platforms: [.windows]))
+                // .unsafeFlags(["-L\(Context.packageDirectory)/Sources/COpenJPEG_arm64-macos/Lib"], .when(platforms: [.macOS])),
+            ],
+        ),
+        .target(
             name: "LibDICOM",
             dependencies: [
                 .target(name: "CLibDICOM_x64-windows", condition: .when(platforms: [.windows])),
@@ -187,6 +202,12 @@ let package = Package(
         .systemLibrary(
             name: "CLibTIFF_arm64-macos",
         ),
+        .systemLibrary(
+            name: "COpenJPEG_x64-windows",
+        ),
+        // .systemLibrary(
+        //     name: "COpenJPEG_arm64-macos",
+        // ),
         .systemLibrary(
             name: "CLittleCMS_x64-windows",
         ),

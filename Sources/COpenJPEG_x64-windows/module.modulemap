@@ -1,0 +1,7 @@
+// cmake -G Ninja -DCMAKE_C_COMPILER=clang -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_CODEC=OFF -DBUILD_TESTING=OFF ../
+
+	module COpenJPEG [system] {
+	header "Include/openjpeg.h"
+	link "openjp2"
+	export *
+	}
